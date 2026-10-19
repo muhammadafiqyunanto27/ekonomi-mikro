@@ -91,13 +91,14 @@
     (spec.regions || []).forEach(function (r) {
       (r.pts || []).forEach(function (p) { xs.push(p[0]); ys.push(p[1]); });
     });
-    (spec.points || []).forEach(function (p) { xs.push(p[0]); ys.push(p[1]); });
+    (spec.points || []).forEach(function (p) { xs.push(p.x); ys.push(p.y); });
     (spec.hlines || []).forEach(function (l) { ys.push(l.y); });
     (spec.vlines || []).forEach(function (l) { xs.push(l.x); });
 
     function pad(arr, fallback) {
-      if (!arr.length) return fallback;
-      return [Math.min.apply(null, arr), Math.max.apply(null, arr)];
+      var ok = arr.filter(function (v) { return isFinite(v); });
+      if (!ok.length) return fallback;
+      return [Math.min.apply(null, ok), Math.max.apply(null, ok)];
     }
     function round(v, up) {
       if (!isFinite(v)) return up ? 1 : 0;
@@ -115,6 +116,10 @@
     var yd = spec.yDomain || [Math.min(0, yb[0]), round(yb[1] * 1.08, true)];
     var yd2 = spec.yDomain2 || null;
     if (!yd2 && ys2.length) yd2 = [0, round(Math.max.apply(null, ys2) * 1.08, true)];
+    /* jaga-jaga: domain tidak valid → jangan pernah hasilkan NaN di SVG */
+    if (!isFinite(xd[0]) || !isFinite(xd[1]) || xd[1] <= xd[0]) xd = [0, 1];
+    if (!isFinite(yd[0]) || !isFinite(yd[1]) || yd[1] <= yd[0]) yd = [0, 1];
+    if (yd2 && (!isFinite(yd2[0]) || !isFinite(yd2[1]) || yd2[1] <= yd2[0])) yd2 = [0, 1];
     return { x: xd, y: yd, y2: yd2 };
   }
 
@@ -154,9 +159,18 @@
     var b = bounds(spec);
     var xd = b.x, yd = b.y, yd2 = b.y2;
 
-    function sx(v) { return m.l + ((v - xd[0]) / (xd[1] - xd[0])) * pw; }
-    function sy(v) { return m.t + ph - ((v - yd[0]) / (yd[1] - yd[0])) * ph; }
-    function sy2(v) { return m.t + ph - ((v - yd2[0]) / (yd2[1] - yd2[0])) * ph; }
+    function sx(v) {
+      if (!isFinite(xd[0]) || !isFinite(xd[1]) || xd[1] === xd[0] || !isFinite(v)) return m.l;
+      return m.l + ((v - xd[0]) / (xd[1] - xd[0])) * pw;
+    }
+    function sy(v) {
+      if (!isFinite(yd[0]) || !isFinite(yd[1]) || yd[1] === yd[0] || !isFinite(v)) return m.t + ph / 2;
+      return m.t + ph - ((v - yd[0]) / (yd[1] - yd[0])) * ph;
+    }
+    function sy2(v) {
+      if (!yd2 || !isFinite(yd2[0]) || !isFinite(yd2[1]) || yd2[1] === yd2[0] || !isFinite(v)) return m.t + ph / 2;
+      return m.t + ph - ((v - yd2[0]) / (yd2[1] - yd2[0])) * ph;
+    }
 
     var out = [];
     out.push('<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' +
@@ -172,12 +186,12 @@
     /* grid */
     xt.forEach(function (v) {
       var X = sx(v);
-      if (X < m.l - 1 || X > m.l + pw + 1) return;
+      if (!isFinite(X) || X < m.l - 1 || X > m.l + pw + 1) return;
       out.push('<line x1="' + X.toFixed(1) + '" y1="' + m.t + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph) + '" stroke="#eee7d8"/>');
     });
     yt.forEach(function (v) {
       var Y = sy(v);
-      if (Y < m.t - 1 || Y > m.t + ph + 1) return;
+      if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
       out.push('<line x1="' + m.l + '" y1="' + Y.toFixed(1) + '" x2="' + (m.l + pw) + '" y2="' + Y.toFixed(1) + '" stroke="#eee7d8"/>');
     });
 
@@ -187,9 +201,11 @@
       if (!r.pts || r.pts.length < 3) return;
       var d = "";
       r.pts.forEach(function (p) {
-        d += (d ? " L" : "M") + sx(p[0]).toFixed(1) + " " + sy(p[1]).toFixed(1);
+        var X = sx(p[0]), Y = sy(p[1]);
+        if (!isFinite(X) || !isFinite(Y)) return;
+        d += (d ? " L" : "M") + X.toFixed(1) + " " + Y.toFixed(1);
       });
-      out.push('<path d="' + d + ' Z" fill="' + col(r.color) + '" opacity="' + (r.opacity || 0.16) + '"/>');
+      if (d) out.push('<path d="' + d + ' Z" fill="' + col(r.color) + '" opacity="' + (r.opacity || 0.16) + '"/>');
     });
     out.push("</g>");
 
@@ -198,14 +214,14 @@
     out.push('<line x1="' + m.l + '" y1="' + m.t + '" x2="' + m.l + '" y2="' + (m.t + ph) + '" stroke="#17140f" stroke-width="1.5"/>');
     xt.forEach(function (v) {
       var X = sx(v);
-      if (X < m.l - 1 || X > m.l + pw + 1) return;
+      if (!isFinite(X) || X < m.l - 1 || X > m.l + pw + 1) return;
       out.push('<line x1="' + X.toFixed(1) + '" y1="' + (m.t + ph) + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph + 4) + '" stroke="#17140f"/>');
       out.push('<text x="' + X.toFixed(1) + '" y="' + (m.t + ph + 17) + '" font-family="' + MONO +
         '" font-size="10.5" fill="#55504a" text-anchor="middle">' + esc(fmt(v)) + "</text>");
     });
     yt.forEach(function (v) {
       var Y = sy(v);
-      if (Y < m.t - 1 || Y > m.t + ph + 1) return;
+      if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
       out.push('<line x1="' + (m.l - 4) + '" y1="' + Y.toFixed(1) + '" x2="' + m.l + '" y2="' + Y.toFixed(1) + '" stroke="#17140f"/>');
       out.push('<text x="' + (m.l - 7) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
         '" font-size="10.5" fill="#55504a" text-anchor="end">' + esc(fmt(v)) + "</text>");
@@ -213,7 +229,7 @@
     if (yd2) {
       yt2.forEach(function (v) {
         var Y = sy2(v);
-        if (Y < m.t - 1 || Y > m.t + ph + 1) return;
+        if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
         out.push('<text x="' + (m.l + pw + 7) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
           '" font-size="10.5" fill="#55504a" text-anchor="start">' + esc(fmt(v)) + "</text>");
       });
@@ -234,7 +250,7 @@
     /* garis bantu kebijakan */
     (spec.hlines || []).forEach(function (l) {
       var Y = sy(l.y);
-      if (Y < m.t - 2 || Y > m.t + ph + 2) return;
+      if (!isFinite(Y) || Y < m.t - 2 || Y > m.t + ph + 2) return;
       out.push('<line x1="' + m.l + '" y1="' + Y.toFixed(1) + '" x2="' + (m.l + pw) + '" y2="' + Y.toFixed(1) +
         '" stroke="' + col(l.color || "blue") + '" stroke-width="1.4" stroke-dasharray="' + (l.dash === false ? "0" : "7 4") + '"/>');
       if (l.label) {
@@ -244,7 +260,7 @@
     });
     (spec.vlines || []).forEach(function (l) {
       var X = sx(l.x);
-      if (X < m.l - 2 || X > m.l + pw + 2) return;
+      if (!isFinite(X) || X < m.l - 2 || X > m.l + pw + 2) return;
       out.push('<line x1="' + X.toFixed(1) + '" y1="' + m.t + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph) +
         '" stroke="' + col(l.color || "ink") + '" stroke-width="1.2" stroke-dasharray="' + (l.dash === false ? "0" : "5 4") + '"/>');
       if (l.label) {

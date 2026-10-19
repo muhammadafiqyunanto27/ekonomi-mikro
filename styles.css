@@ -267,6 +267,7 @@ code, kbd, samp, .mono { font-family: var(--font-mono); }
   gap: var(--space-xl);
   align-items: start;
 }
+.materi-layout .babs { min-width: 0; }
 .toc {
   position: sticky;
   top: calc(var(--header-h) + var(--space-m));
@@ -793,7 +794,7 @@ table.t tbody tr:hover { background: var(--tint); }
 
 /* ------------------------------------------------------ responsive */
 @media (max-width: 1000px) {
-  .materi-layout { grid-template-columns: 1fr; }
+  .materi-layout { grid-template-columns: minmax(0, 1fr); }
   .toc { display: none; }
   .toc-mobile { display: block; }
   .calc-grid { grid-template-columns: 1fr; }
@@ -830,4 +831,51 @@ table.t tbody tr:hover { background: var(--tint); }
   .site-header, .hero-actions, .mode-tabs, .form-actions, .toc-mobile, .btn { display: none !important; }
   body { background: #fff; }
   .section { border-bottom: 1px solid #999; padding: var(--space-m) 0; }
+}
+
+/* ================================================== MULTI-PAGE BARU == */
+.page-crumb {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-top: var(--space-l);
+}
+.page-crumb a { color: var(--ink-2); }
+.page-crumb b { color: var(--ink); }
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-s);
+}
+.quick {
+  display: grid;
+  gap: var(--space-2xs);
+  align-content: start;
+  border: var(--border-2);
+  background: var(--surface);
+  padding: var(--space-l);
+  color: var(--ink);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.quick:hover { background: var(--tint); border-color: var(--accent); }
+.quick .qtag { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; }
+.quick h3 { font-size: var(--step-1); line-height: 1.25; }
+.quick p { font-size: var(--step--1); color: var(--ink-2); }
+
+.calc-status {
+  border: 2px solid var(--accent);
+  background: #eef3ef;
+  padding: var(--space-2xs) var(--space-s);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--ink);
+  line-height: 1.6;
+}
+.calc-status:empty { display: none; }
+
+@media (max-width: 700px) {
+  .quick { padding: var(--space-m); }
 }

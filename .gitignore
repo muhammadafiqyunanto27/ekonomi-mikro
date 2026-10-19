@@ -1,0 +1,9 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Office lock files
+~$*
+
+# Screenshot hasil tes lokal
+scripts/shot-*.png

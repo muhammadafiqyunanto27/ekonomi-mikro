@@ -6,7 +6,7 @@
 (function () {
   "use strict";
 
-  var fmt = window.Charts.fmt;
+  var fmt = (window.Charts && window.Charts.fmt) || function (v) { return String(v); };
 
   /* ------------------------------------------------------------ util */
   function esc(s) {
@@ -80,13 +80,13 @@
           ["kuota", "kuota produksi (Q̄)"]
         ]
       },
-      { id: "t", label: "Pajak per unit (t)", def: 1.25, when: function (v) { return v.policy === "pajak"; } },
+      { id: "t", label: "Pajak per unit (t)", def: 3, when: function (v) { return v.policy === "pajak"; } },
       { id: "k", label: "Pajak persen (%)", def: 20, when: function (v) { return v.policy === "pajakprosen"; } },
-      { id: "s", label: "Subsidi per unit (s)", def: 1.25, when: function (v) { return v.policy === "subsidi"; } },
-      { id: "Pmin", label: "Harga minimum (floor)", def: 600, when: function (v) { return v.policy === "floor"; } },
+      { id: "s", label: "Subsidi per unit (s)", def: 3, when: function (v) { return v.policy === "subsidi"; } },
+      { id: "Pmin", label: "Harga minimum (floor)", def: 18, when: function (v) { return v.policy === "floor"; } },
       { id: "govBuy", label: "Pemerintah membeli kelebihan (surplus) itu", def: true, type: "check", when: function (v) { return v.policy === "floor"; } },
-      { id: "Pmax", label: "Harga maksimum (ceiling)", def: 750, when: function (v) { return v.policy === "ceiling"; } },
-      { id: "Qbar", label: "Kuota produksi (Q̄)", def: 10000, when: function (v) { return v.policy === "kuota"; } },
+      { id: "Pmax", label: "Harga maksimum (ceiling)", def: 12, when: function (v) { return v.policy === "ceiling"; } },
+      { id: "Qbar", label: "Kuota produksi (Q̄)", def: 30, when: function (v) { return v.policy === "kuota"; } },
       { id: "surplus", label: "Tampilkan daerah surplus konsumen &amp; produsen", def: true, type: "check" }
     ],
     compute: function (v) {
@@ -343,6 +343,7 @@
       ];
       if (excessType === "supply") results.push({ label: "Kelebihan penawaran", value: nice(excess), sub: "excess supply" });
       if (excessType === "demand") results.push({ label: "Kelangkaan", value: nice(excess), sub: "excess demand" });
+      if (govCost > 0) results.push({ label: "Biaya pembelian pemerintah", value: nice(govCost), sub: "menyerap kelebihan penawaran" });
       if (rev > 0) results.push({ label: policy === "subsidi" ? "Biaya subsidi" : "Penerimaan pajak", value: nice(rev) });
 
       /* ---------- grafik ---------- */
@@ -475,6 +476,16 @@
             "Ep = " + nice(E) + "      |Ep| = " + nice(Math.abs(E))
           ],
           result: true
+        });
+        steps.push({
+          label: "Interpretasi",
+          lines: [
+            Math.abs(E) > 1 ? "|Ep| &gt; 1 → permintaan elastis"
+              : Math.abs(E) < 1 ? "|Ep| &lt; 1 → permintaan inelastis"
+                : "|Ep| = 1 → permintaan elastis unitary",
+            "Jika harga naik 1%, kuantitas permintaan berubah sekitar " + nice(E) + "% (bergerak berlawanan arah).",
+            "TR = P × Q pada titik uji = " + nice(P) + " × " + nice(Q) + " = " + nice(P * Q)
+          ]
         });
         status = "Permintaan " + klasifikasi(E) + ". " +
           (Math.abs(E) > 1
@@ -1516,4 +1527,356 @@
       };
     }
   };
-<!-- @@APP-NEXT@@ -->
+  /* ======================================================== UI WIRING */
+  function $(id) { return document.getElementById(id); }
+
+  function clearOutput() {
+    ["calc-results", "calc-steps", "calc-notes", "calc-charts"].forEach(function (id) {
+      var el = $(id);
+      if (el) el.innerHTML = "";
+    });
+    var st = $("calc-status");
+    if (st) st.innerHTML = "";
+  }
+
+  function renderResults(results) {
+    var el = $("calc-results");
+    if (!el) return;
+    el.innerHTML = "";
+    (results || []).forEach(function (r) {
+      var d = document.createElement("div");
+      d.className = "result" + (r.hero ? " hero-result" : "");
+      d.innerHTML =
+        '<span class="rlabel">' + (r.label || "") + "</span>" +
+        '<span class="rvalue">' + (r.value || "") +
+        (r.sub ? '<small class="rsub">' + r.sub + "</small>" : "") + "</span>";
+      el.appendChild(d);
+    });
+  }
+
+  function renderSteps(steps) {
+    var el = $("calc-steps");
+    if (!el) return;
+    el.innerHTML = "";
+    (steps || []).forEach(function (st) {
+      var li = document.createElement("li");
+      var html = "";
+      if (st.label) html += '<span class="st-label">' + st.label + "</span>";
+      if (st.lines && st.lines.length) {
+        html += st.lines.map(function (ln) {
+          return '<span class="st-line' + (st.result ? " result-line" : "") + '">' + ln + "</span>";
+        }).join("");
+      }
+      li.innerHTML = html;
+      el.appendChild(li);
+    });
+  }
+
+  function renderNotes(notes) {
+    var el = $("calc-notes");
+    if (!el) return;
+    el.innerHTML = "";
+    (notes || []).forEach(function (n) {
+      var div = document.createElement("div");
+      div.className = "note";
+      div.innerHTML = n;
+      el.appendChild(div);
+    });
+  }
+
+  function renderStatus(status) {
+    var el = $("calc-status") || $("calc-desc");
+    if (el) el.innerHTML = status || "";
+  }
+
+  function showError(msg) {
+    var el = $("calc-error");
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = msg; /* pesan teks polos — aman dari HTML */
+  }
+  function hideError() {
+    var el = $("calc-error");
+    if (!el) return;
+    el.hidden = true;
+    el.textContent = "";
+  }
+
+  var boundMode = null;
+  var recomputeTimer = null;
+
+  function currentValues(id) {
+    var m = MODES[id];
+    var out = {};
+    if (!m) return out;
+    m.fields.forEach(function (f) {
+      var el = $("f-" + id + "-" + f.id);
+      if (!el) return;
+      if (f.type === "check") out[f.id] = el.checked;
+      else if (f.type === "select") out[f.id] = el.value; /* teks, jangan diparse jadi angka */
+      else out[f.id] = parseVal(el.value);
+    });
+    return out;
+  }
+
+  function updateFieldVisibility(id) {
+    var m = MODES[id];
+    if (!m) return;
+    var vals = currentValues(id);
+    m.fields.forEach(function (f) {
+      var wrap = $("w-" + id + "-" + f.id);
+      if (!wrap) return;
+      var show = true;
+      if (typeof f.when === "function") {
+        try { show = !!f.when(vals); } catch (e) { show = true; }
+      }
+      wrap.classList.toggle("hidden", !show);
+      var el = $("f-" + id + "-" + f.id);
+      if (el) el.disabled = !show;
+    });
+  }
+
+  function buildForm(id) {
+    var m = MODES[id];
+    var form = $("calc-form");
+    if (!m || !form) return;
+    boundMode = id;
+    var title = $("calc-title");
+    var desc = $("calc-desc");
+    if (title) title.textContent = m.title || m.label;
+    if (desc) desc.textContent = m.desc || "";
+    form.innerHTML = "";
+    form.setAttribute("data-mode", id);
+
+    m.fields.forEach(function (f) {
+      var wrap = document.createElement("div");
+      wrap.className = "field";
+      wrap.id = "w-" + id + "-" + f.id;
+
+      if (f.type === "check") {
+        wrap.classList.add("check");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = "f-" + id + "-" + f.id;
+        cb.name = f.id;
+        cb.checked = !!f.def;
+        var cl = document.createElement("label");
+        cl.setAttribute("for", cb.id);
+        cl.innerHTML = f.label;
+        wrap.appendChild(cb);
+        wrap.appendChild(cl);
+        form.appendChild(wrap);
+        return;
+      }
+
+      var label = document.createElement("label");
+      label.setAttribute("for", "f-" + id + "-" + f.id);
+      label.innerHTML = f.label;
+      wrap.appendChild(label);
+
+      if (f.type === "select") {
+        var sel = document.createElement("select");
+        sel.id = "f-" + id + "-" + f.id;
+        sel.name = f.id;
+        (f.options || []).forEach(function (o) {
+          var opt = document.createElement("option");
+          opt.value = o[0];
+          opt.textContent = o[1];
+          sel.appendChild(opt);
+        });
+        if (f.def !== undefined) sel.value = String(f.def);
+        wrap.appendChild(sel);
+      } else {
+        var inp = document.createElement("input");
+        inp.type = "text";
+        inp.setAttribute("inputmode", "decimal");
+        inp.id = "f-" + id + "-" + f.id;
+        inp.name = f.id;
+        inp.value = f.def === undefined ? "" : String(f.def);
+        if (f.placeholder) inp.placeholder = f.placeholder;
+        wrap.appendChild(inp);
+      }
+      if (f.hint) {
+        var h = document.createElement("span");
+        h.className = "hint";
+        h.innerHTML = f.hint;
+        wrap.appendChild(h);
+      }
+      form.appendChild(wrap);
+    });
+
+    /* tombol aksi */
+    var act = document.createElement("div");
+    act.className = "form-actions";
+    var btnCalc = document.createElement("button");
+    btnCalc.className = "btn";
+    btnCalc.type = "button";
+    btnCalc.textContent = "Hitung";
+    btnCalc.addEventListener("click", function () { computeAndRender(true); });
+    var btnReset = document.createElement("button");
+    btnReset.className = "btn btn-line";
+    btnReset.type = "button";
+    btnReset.textContent = "Reset";
+    btnReset.addEventListener("click", function () {
+      clearOutput();
+      buildForm(boundMode);
+      computeAndRender(true);
+    });
+    act.appendChild(btnCalc);
+    act.appendChild(btnReset);
+    form.appendChild(act);
+
+    /* dengarkan input — dengung 350ms supaya nggak hitung tiap ketikan */
+    if (!form.dataset.bound) {
+      form.dataset.bound = "1";
+      form.addEventListener("input", function () {
+        if (!boundMode) return;
+        updateFieldVisibility(boundMode);
+        clearTimeout(recomputeTimer);
+        recomputeTimer = setTimeout(function () { computeAndRender(false); }, 350);
+      });
+      form.addEventListener("change", function () {
+        if (!boundMode) return;
+        updateFieldVisibility(boundMode);
+        computeAndRender(false);
+      });
+    }
+    updateFieldVisibility(id);
+  }
+
+  function computeAndRender(force) {
+    var id = boundMode;
+    var m = MODES[id];
+    var form = $("calc-form");
+    if (!m || !m.compute || !form) return;
+    hideError();
+    updateFieldVisibility(id);
+    var vals = currentValues(id);
+    try {
+      var out = m.compute(vals);
+      renderResults(out.results);
+      renderSteps(out.steps);
+      renderNotes(out.notes || []);
+      renderStatus(out.status || "");
+      var charts = $("calc-charts");
+      if (charts) {
+        charts.innerHTML = "";
+        if (out.charts && out.charts.length) {
+          window.Charts.render(charts, out.charts);
+        } else {
+          var empty = document.createElement("div");
+          empty.className = "chart-empty";
+          empty.textContent = "Grafik tidak tersedia untuk mode ini.";
+          charts.appendChild(empty);
+        }
+      }
+    } catch (e) {
+      /* pertahankan hasil terakhir yang benar, hanya tampilkan peringatan */
+      showError(e && e.message ? e.message : String(e));
+      if (force) {
+        renderResults([]);
+        renderSteps([]);
+        renderNotes([]);
+        renderStatus("");
+        var c = $("calc-charts");
+        if (c) c.innerHTML = "";
+      }
+    }
+  }
+
+  function buildTabs(active) {
+    var tabs = $("mode-tabs");
+    if (!tabs) return;
+    tabs.innerHTML = "";
+    Object.keys(MODES).forEach(function (key) {
+      var btn = document.createElement("button");
+      btn.className = "mode-tab";
+      btn.type = "button";
+      btn.setAttribute("role", "tab");
+      btn.dataset.mode = key;
+      btn.setAttribute("aria-selected", key === active ? "true" : "false");
+      btn.textContent = MODES[key].label;
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(tabs.querySelectorAll(".mode-tab"), function (b) {
+          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+        });
+        clearOutput();
+        hideError();
+        buildForm(key);
+        computeAndRender(true);
+      });
+      tabs.appendChild(btn);
+    });
+  }
+
+  function applyValues(mode, json) {
+    var vals;
+    try { vals = JSON.parse(json || "{}"); } catch (e) { return; }
+    Object.keys(vals).forEach(function (k) {
+      var el = $("f-" + mode + "-" + k);
+      if (!el) return;
+      if (el.type === "checkbox") el.checked = !!vals[k];
+      else el.value = String(vals[k]);
+    });
+    updateFieldVisibility(mode);
+  }
+
+  function switchMode(mode) {
+    var tabs = $("mode-tabs");
+    if (!tabs || !MODES[mode]) return false;
+    Array.prototype.forEach.call(tabs.querySelectorAll(".mode-tab"), function (b) {
+      b.setAttribute("aria-selected", b.dataset.mode === mode ? "true" : "false");
+    });
+    clearOutput();
+    hideError();
+    buildForm(mode);
+    return true;
+  }
+
+  /* tombol "Coba di kalkulator" di halaman lain → pindah + isi + hitung */
+  function wirePrefill() {
+    document.addEventListener("click", function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest("[data-calc]") : null;
+      if (!btn) return;
+      ev.preventDefault();
+      var mode = btn.getAttribute("data-calc");
+      var json = btn.getAttribute("data-values") || "{}";
+      if (!MODES[mode]) return;
+      if (!$("mode-tabs")) {
+        /* halaman non-kalkulator: pindah dulu sambil bawa parameter */
+        location.href = "kalkulator.html?mode=" + encodeURIComponent(mode) +
+          "&values=" + encodeURIComponent(json);
+        return;
+      }
+      if (!switchMode(mode)) return;
+      applyValues(mode, json);
+      computeAndRender(true);
+      var sec = $("kalkulator");
+      if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function init() {
+    wirePrefill();
+    var tabs = $("mode-tabs");
+    if (!tabs) return; /* halaman tanpa kalkulator: cukup tombol prefill */
+    var params;
+    try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
+    var mode = params ? params.get("mode") : null;
+    if (!MODES[mode]) mode = Object.keys(MODES)[0];
+    buildTabs(mode);
+    buildForm(mode);
+    if (params && params.get("values")) applyValues(mode, params.get("values"));
+    hideError();
+    computeAndRender(true);
+  }
+
+  /* API kecil untuk debugging / kebutuhan halaman lain */
+  window.EKONOMI = { MODES: MODES, compute: function () { computeAndRender(true); }, switchMode: switchMode, applyValues: applyValues };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
