@@ -14,7 +14,7 @@
 (function () {
   "use strict";
 
-  var COLORS = {
+  var FALLBACK = {
     demand: "#b4432e",
     supply: "#1e5f45",
     accent: "#1e5f45",
@@ -26,7 +26,26 @@
 
   var MONO = "Consolas, 'Cascadia Mono', 'Courier New', monospace";
 
-  function col(c) { return COLORS[c] || c || COLORS.ink; }
+  /* warna diambil dari token CSS saat grafik digambar — otomatis mengikuti
+     mode terang/gelap (js/theme.js), dan tetap jalan tanpa token (fallback) */
+  function cssVar(name, fb) {
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      v = v && v.replace(/^\s+|\s+$/g, "");
+      return v || fb;
+    } catch (e) { return fb; }
+  }
+
+  var VAR_OF = {
+    demand: "--demand", supply: "--accent", accent: "--accent",
+    blue: "--blue", amber: "--amber", ink: "--ink", muted: "--ink-3"
+  };
+
+  function col(c) {
+    var key = c || "ink";
+    if (VAR_OF[key]) return cssVar(VAR_OF[key], FALLBACK[key]);
+    return key;
+  }
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (m) {
@@ -178,7 +197,7 @@
     out.push('<defs><clipPath id="' + clipId + '"><rect x="' + m.l + '" y="' + m.t + '" width="' + pw + '" height="' + ph + '"/></clipPath></defs>');
 
     /* bidang gambar */
-    out.push('<rect x="' + m.l + '" y="' + m.t + '" width="' + pw + '" height="' + ph + '" fill="#fffdf8" stroke="#ded6c6"/>');
+    out.push('<rect x="' + m.l + '" y="' + m.t + '" width="' + pw + '" height="' + ph + '" fill="' + cssVar("--surface", "#fffdf8") + '" stroke="' + cssVar("--line", "#ded6c6") + '"/>');
 
     var xt = niceTicks(xd[0], xd[1], 7), yt = niceTicks(yd[0], yd[1], 6);
     var yt2 = yd2 ? niceTicks(yd2[0], yd2[1], 6) : [];
@@ -187,12 +206,12 @@
     xt.forEach(function (v) {
       var X = sx(v);
       if (!isFinite(X) || X < m.l - 1 || X > m.l + pw + 1) return;
-      out.push('<line x1="' + X.toFixed(1) + '" y1="' + m.t + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph) + '" stroke="#eee7d8"/>');
+      out.push('<line x1="' + X.toFixed(1) + '" y1="' + m.t + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--grid", "#eee7d8") + '"/>');
     });
     yt.forEach(function (v) {
       var Y = sy(v);
       if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
-      out.push('<line x1="' + m.l + '" y1="' + Y.toFixed(1) + '" x2="' + (m.l + pw) + '" y2="' + Y.toFixed(1) + '" stroke="#eee7d8"/>');
+      out.push('<line x1="' + m.l + '" y1="' + Y.toFixed(1) + '" x2="' + (m.l + pw) + '" y2="' + Y.toFixed(1) + '" stroke="' + cssVar("--grid", "#eee7d8") + '"/>');
     });
 
     /* daerah (surplus, dwl, dll) */
@@ -210,41 +229,41 @@
     out.push("</g>");
 
     /* sumbu + label tick */
-    out.push('<line x1="' + m.l + '" y1="' + (m.t + ph) + '" x2="' + (m.l + pw) + '" y2="' + (m.t + ph) + '" stroke="#17140f" stroke-width="1.5"/>');
-    out.push('<line x1="' + m.l + '" y1="' + m.t + '" x2="' + m.l + '" y2="' + (m.t + ph) + '" stroke="#17140f" stroke-width="1.5"/>');
+    out.push('<line x1="' + m.l + '" y1="' + (m.t + ph) + '" x2="' + (m.l + pw) + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+    out.push('<line x1="' + m.l + '" y1="' + m.t + '" x2="' + m.l + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
     xt.forEach(function (v) {
       var X = sx(v);
       if (!isFinite(X) || X < m.l - 1 || X > m.l + pw + 1) return;
-      out.push('<line x1="' + X.toFixed(1) + '" y1="' + (m.t + ph) + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph + 4) + '" stroke="#17140f"/>');
+      out.push('<line x1="' + X.toFixed(1) + '" y1="' + (m.t + ph) + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph + 4) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
       out.push('<text x="' + X.toFixed(1) + '" y="' + (m.t + ph + 17) + '" font-family="' + MONO +
-        '" font-size="10.5" fill="#55504a" text-anchor="middle">' + esc(fmt(v)) + "</text>");
+        '" font-size="10.5" fill="' + cssVar("--ink-2", "#55504a") + '" text-anchor="middle">' + esc(fmt(v)) + "</text>");
     });
     yt.forEach(function (v) {
       var Y = sy(v);
       if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
-      out.push('<line x1="' + (m.l - 4) + '" y1="' + Y.toFixed(1) + '" x2="' + m.l + '" y2="' + Y.toFixed(1) + '" stroke="#17140f"/>');
+      out.push('<line x1="' + (m.l - 4) + '" y1="' + Y.toFixed(1) + '" x2="' + m.l + '" y2="' + Y.toFixed(1) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
       out.push('<text x="' + (m.l - 7) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
-        '" font-size="10.5" fill="#55504a" text-anchor="end">' + esc(fmt(v)) + "</text>");
+        '" font-size="10.5" fill="' + cssVar("--ink-2", "#55504a") + '" text-anchor="end">' + esc(fmt(v)) + "</text>");
     });
     if (yd2) {
       yt2.forEach(function (v) {
         var Y = sy2(v);
         if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
         out.push('<text x="' + (m.l + pw + 7) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
-          '" font-size="10.5" fill="#55504a" text-anchor="start">' + esc(fmt(v)) + "</text>");
+          '" font-size="10.5" fill="' + cssVar("--ink-2", "#55504a") + '" text-anchor="start">' + esc(fmt(v)) + "</text>");
       });
     }
 
     /* label sumbu */
     out.push('<text x="' + (m.l + pw) + '" y="' + (m.t + ph + 38) + '" font-family="' + MONO +
-      '" font-size="11.5" fill="#17140f" text-anchor="end">' + esc(spec.xLabel || "Kuantitas (Q)") + "</text>");
+      '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '" text-anchor="end">' + esc(spec.xLabel || "Kuantitas (Q)") + "</text>");
     out.push('<text x="' + (m.l - 54) + '" y="' + (m.t + ph + 38) + '" font-family="' + MONO +
-      '" font-size="11.5" fill="#17140f">0</text>');
+      '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '">0</text>');
     out.push('<text transform="translate(' + (m.l - 48) + ',' + m.t + ') rotate(-90)" font-family="' + MONO +
-      '" font-size="11.5" fill="#17140f" text-anchor="end">' + esc(spec.yLabel || "Harga (P)") + "</text>");
+      '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '" text-anchor="end">' + esc(spec.yLabel || "Harga (P)") + "</text>");
     if (yd2) {
       out.push('<text transform="translate(' + (m.l + pw + 56) + ',' + m.t + ') rotate(-90)" font-family="' + MONO +
-        '" font-size="11.5" fill="#17140f" text-anchor="end">' + esc(spec.yLabel2) + "</text>");
+        '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '" text-anchor="end">' + esc(spec.yLabel2) + "</text>");
     }
 
     /* garis bantu kebijakan */
@@ -286,7 +305,7 @@
       var X = sx(p.x), Y = sy(p.y);
       if (!isFinite(X) || !isFinite(Y)) return;
       out.push('<circle cx="' + X.toFixed(1) + '" cy="' + Y.toFixed(1) + '" r="4.5" fill="' + col(p.color || "ink") +
-        '" stroke="#fffdf8" stroke-width="1.6"/>');
+        '" stroke="' + cssVar("--surface", "#fffdf8") + '" stroke-width="1.6"/>');
       if (p.label) {
         var tx = X + (p.dx === undefined ? 9 : p.dx);
         var ty = Y + (p.dy === undefined ? -9 : p.dy);
@@ -294,7 +313,7 @@
         if (tx > m.l + pw - 8) { anchor = "end"; tx = X - 9; }
         out.push('<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-family="' + MONO +
           '" font-size="11" font-weight="700" fill="' + col(p.color || "ink") + '" text-anchor="' + anchor +
-          '" stroke="#fffdf8" stroke-width="3" paint-order="stroke">' + esc(p.label) + "</text>");
+          '" stroke="' + cssVar("--surface", "#fffdf8") + '" stroke-width="3" paint-order="stroke">' + esc(p.label) + "</text>");
       }
     });
 

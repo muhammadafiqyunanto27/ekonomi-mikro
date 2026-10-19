@@ -1648,6 +1648,12 @@
     form.innerHTML = "";
     form.setAttribute("data-mode", id);
 
+    /* petunjuk singkat di atas kolom input */
+    var legend = document.createElement("p");
+    legend.className = "form-legend";
+    legend.textContent = "Isi angka di bawah — hasil, langkah, dan grafik menyusul otomatis. Pakai titik (.) untuk desimal, mis. 1.25.";
+    form.appendChild(legend);
+
     m.fields.forEach(function (f) {
       var wrap = document.createElement("div");
       wrap.className = "field";
@@ -1788,14 +1794,14 @@
     var tabs = $("mode-tabs");
     if (!tabs) return;
     tabs.innerHTML = "";
-    Object.keys(MODES).forEach(function (key) {
+    Object.keys(MODES).forEach(function (key, i) {
       var btn = document.createElement("button");
       btn.className = "mode-tab";
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.dataset.mode = key;
       btn.setAttribute("aria-selected", key === active ? "true" : "false");
-      btn.textContent = MODES[key].label;
+      btn.textContent = ("0" + (i + 1)).slice(-2) + "  " + MODES[key].label;
       btn.addEventListener("click", function () {
         Array.prototype.forEach.call(tabs.querySelectorAll(".mode-tab"), function (b) {
           b.setAttribute("aria-selected", b === btn ? "true" : "false");
@@ -1832,6 +1838,11 @@
     buildForm(mode);
     return true;
   }
+
+  /* gambar ulang grafik ketika tema terang/gelap berganti (js/theme.js) */
+  document.addEventListener("ek:themechange", function () {
+    if (boundMode) computeAndRender(false);
+  });
 
   /* tombol "Coba di kalkulator" di halaman lain → pindah + isi + hitung */
   function wirePrefill() {

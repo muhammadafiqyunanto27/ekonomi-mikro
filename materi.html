@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Materi Ekonomi Mikro — Bab 1 sampai 7</title>
 <meta name="description" content="Materi lengkap Ekonomi Mikro Bab 1 sampai 7: pengantar, mekanisme pasar, kebijakan dan kegagalan pasar, elastisitas, perilaku konsumen, produksi dan biaya, struktur pasar.">
+<script>
+  /* terapkan tema tersimpan sebelum halaman dicat — hindari kedip */
+  (function () {
+    try {
+      var t = localStorage.getItem("ek-theme");
+      if (!t) t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  })();
+</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4efe4'/%3E%3Cpath d='M4 26 L28 6' stroke='%23b4432e' stroke-width='3' fill='none'/%3E%3Cpath d='M4 6 L28 26' stroke='%231e5f45' stroke-width='3' fill='none'/%3E%3C/svg%3E">
 </head>
@@ -21,6 +31,11 @@
       <a href="kasus.html">Kasus Nyata</a>
       <a href="kalkulator.html">Kalkulator</a>
     </nav>
+    <button class="theme-btn" type="button" data-theme-toggle aria-label="Ganti mode terang atau gelap" aria-pressed="false" title="Mode terang / gelap">
+      <svg class="ic ic-moon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 9.8A5.6 5.6 0 0 1 6.2 3 5.7 5.7 0 1 0 13 9.8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <svg class="ic ic-sun" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2 3.4 12.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="theme-btn-txt">Gelap</span>
+    </button>
   </div>
 </header>
 
@@ -34,6 +49,17 @@
       <h2>Materi Lengkap</h2>
       <p class="desc">Penjelasan seluruh catatan kuliah, diurutkan per bab. Setiap rumus penting diberi kotak rumus; angka contoh bisa langsung dikirim ke kalkulator.</p>
     </div>
+
+    <aside class="guide" aria-label="Petunjuk membaca materi">
+      <p class="g-title">Cara membaca halaman materi</p>
+      <ul>
+        <li><strong>Definisi</strong> ditulis sebagai teks penjelas berwarna lebih tenang &mdash; kalimat penting yang harus dipahami sebelum masuk ke rumus.</li>
+        <li><strong>Rumus</strong> ada di kotak bergaris hijau, lengkap dengan keterangan tiap simbol di bawahnya.</li>
+        <li><strong>Contoh hitung</strong> ada di kotak abu-abu dengan langkah berurutan &mdash; ikuti angkanya di kalkulator sambil membaca.</li>
+        <li><strong>Tabel</strong> dipakai untuk membandingkan konsep berpasangan (mis. pasar persaingan sempurna vs. monopoli).</li>
+        <li>Di komputer, daftar isi 7 bab menempel di kiri layar dan otomatis menandai bab yang sedang dibaca; di HP buka &ldquo;Daftar isi materi&rdquo; lalu pilih bab.</li>
+      </ul>
+    </aside>
 
     <div class="materi-layout">
       <nav class="toc" aria-label="Daftar materi">
@@ -700,6 +726,7 @@ TR = 871,875 ;  TC = 405,625 ;  Laba = 466,25</p>
   </div>
 </footer>
 
+<script src="js/theme.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/app.js"></script>
 </body>

@@ -44,6 +44,13 @@
   --blue:     #2a4b7c;  /* seri ketiga */
   --amber:    #9a6a12;  /* peringatan, deadweight loss */
   --tint:     #eae3d3;  /* isian lembut di atas kertas */
+  --grid:     #eee7d8;  /* garis bantu grafik */
+  --plot:     #fffdf8;  /* latar bidang gambar grafik */
+  --tab-hover:#e5ddcb;  /* latar tab saat disorot */
+  --alert-bg: #fbf1e9;  /* latar pesan galat */
+  --status-bg:#eef3ef;  /* latar bar ringkasan hasil */
+  --invalid-bg:#fbeeaa; /* latar kolom input yang salah */
+  --sel:      #cfe0d5;  /* sorotan teks (selection) */
 
   /* FORM */
   --radius:   0;
@@ -62,6 +69,32 @@
   --measure: 68ch;
   --wide: 1200px;
   --header-h: 3.25rem;
+  color-scheme: light;
+}
+
+/* --------------------------------------------- mode gelap (sakelar tema) */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --base:      #14110c;
+  --surface:   #1e1a13;
+  --tint:      #2a2419;
+  --ink:       #efe7d4;
+  --ink-2:     #bcb2a0;
+  --ink-3:     #928878;
+  --line:      #363022;
+  --line-2:    #4c4433;
+  --accent:    #7cc3a0;
+  --accent-d:  #a2d8bb;
+  --demand:    #e38164;
+  --blue:      #8fb0dd;
+  --amber:     #d9a441;
+  --grid:      #2c2618;
+  --plot:      #1a1610;
+  --tab-hover: #2a2419;
+  --alert-bg:  #3a231b;
+  --status-bg: #182b21;
+  --invalid-bg:#472620;
+  --sel:       #2c3d33;
 }
 
 /* ---------------------------------------------------------------- base */
@@ -104,7 +137,7 @@ a:hover { color: var(--accent-d); }
 
 code, kbd, samp, .mono { font-family: var(--font-mono); }
 
-::selection { background: #cfe0d5; color: var(--ink); }
+::selection { background: var(--sel); color: var(--ink); }
 
 .skip-link {
   position: absolute;
@@ -185,7 +218,7 @@ code, kbd, samp, .mono { font-family: var(--font-mono); }
 /* ---------------------------------------------------------------- hero */
 .hero {
   border-bottom: var(--border-2);
-  padding: var(--space-3xl) 0 var(--space-2xl);
+  padding: var(--space-xl) 0 var(--space-2xl);
 }
 .hero-grid {
   display: grid;
@@ -253,7 +286,7 @@ code, kbd, samp, .mono { font-family: var(--font-mono); }
 
 /* ------------------------------------------------------------ sections */
 .section {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0 var(--space-2xl);
   border-bottom: var(--border-2);
 }
 .section-head { margin-bottom: var(--space-xl); max-width: var(--measure); }
@@ -569,7 +602,7 @@ table.t tbody tr:hover { background: var(--tint); }
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
-.mode-tab:hover { color: var(--ink); background: #e5ddcb; }
+.mode-tab:hover { color: var(--ink); background: var(--tab-hover); }
 .mode-tab:active { transform: translateY(1px); }
 .mode-tab[aria-selected="true"] {
   background: var(--surface);
@@ -595,7 +628,15 @@ table.t tbody tr:hover { background: var(--tint); }
 }
 
 /* ----------------------------------------------------------- form */
-.calc-form { display: grid; gap: var(--space-s); }
+.calc-form {
+  display: grid;
+  gap: var(--space-s);
+  position: sticky;
+  top: calc(var(--header-h) + var(--space-s));
+  max-height: calc(100vh - var(--header-h) - var(--space-l));
+  overflow-y: auto;
+  padding-right: var(--space-3xs);
+}
 .field { display: grid; gap: var(--space-3xs); }
 .field.hidden { display: none; }
 .field > label {
@@ -630,7 +671,7 @@ table.t tbody tr:hover { background: var(--tint); }
   background: var(--surface);
   border-color: var(--accent);
 }
-.field input[aria-invalid="true"] { border-color: var(--demand); background: #fbeeaa; }
+.field input[aria-invalid="true"] { border-color: var(--demand); background: var(--invalid-bg); }
 .field .hint { font-size: 0.72rem; color: var(--ink-3); font-family: var(--font-mono); }
 .field.check {
   grid-template-columns: auto minmax(0, 1fr);
@@ -659,7 +700,7 @@ table.t tbody tr:hover { background: var(--tint); }
 
 .alert {
   border: 2px solid var(--demand);
-  background: #fbf1e9;
+  background: var(--alert-bg);
   color: var(--ink);
   padding: var(--space-2xs) var(--space-s);
   font-family: var(--font-mono);
@@ -798,15 +839,18 @@ table.t tbody tr:hover { background: var(--tint); }
   .toc { display: none; }
   .toc-mobile { display: block; }
   .calc-grid { grid-template-columns: 1fr; }
+  .calc-form { position: static; max-height: none; overflow: visible; padding-right: 0; }
   .hero-grid { grid-template-columns: 1fr; align-items: start; }
   .hero-side { border-left: 0; border-top: var(--border-2); padding-left: 0; padding-top: var(--space-s); }
 }
 @media (max-width: 700px) {
+  .mode-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .mode-tab { flex: 0 0 auto; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .stats .stat:nth-child(3) { border-left: 0; }
   .stats .stat:nth-child(-n+2) { border-bottom: var(--border); }
   .hero h1 { font-size: var(--step-5); }
-  .section { padding: var(--space-2xl) 0; }
+  .section { padding: var(--space-l) 0 var(--space-xl); }
   .frow { grid-template-columns: 1fr; gap: var(--space-3xs); }
   .frow .go .btn { justify-self: start; }
   .results { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
@@ -840,7 +884,7 @@ table.t tbody tr:hover { background: var(--tint); }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
-  padding-top: var(--space-l);
+  padding-top: var(--space-s);
 }
 .page-crumb a { color: var(--ink-2); }
 .page-crumb b { color: var(--ink); }
@@ -867,7 +911,7 @@ table.t tbody tr:hover { background: var(--tint); }
 
 .calc-status {
   border: 2px solid var(--accent);
-  background: #eef3ef;
+  background: var(--status-bg);
   padding: var(--space-2xs) var(--space-s);
   font-family: var(--font-mono);
   font-size: var(--step--1);
@@ -879,3 +923,134 @@ table.t tbody tr:hover { background: var(--tint); }
 @media (max-width: 700px) {
   .quick { padding: var(--space-m); }
 }
+
+/* ============================================ TEMA, PANDUAN, PENJELASAN */
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: transparent;
+  border: var(--border-2);
+  padding: var(--space-3xs) var(--space-2xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.theme-btn:hover { color: var(--ink); border-color: var(--accent); }
+.theme-btn .ic { display: block; }
+.theme-btn .ic-sun { display: none; }
+html[data-theme="dark"] .theme-btn .ic-sun { display: block; }
+html[data-theme="dark"] .theme-btn .ic-moon { display: none; }
+
+/* blok penjelasan (petunjuk membaca / struktur halaman) */
+.guide {
+  border: var(--border-2);
+  border-left: 3px solid var(--blue);
+  background: var(--surface);
+  padding: var(--space-m);
+  margin: 0 0 var(--space-l);
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.guide .g-title {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--blue);
+  font-weight: 700;
+  margin: 0 0 var(--space-2xs);
+}
+.guide ul { margin: 0; padding-left: var(--space-m); }
+.guide li { margin-bottom: var(--space-3xs); }
+.guide li:last-child { margin-bottom: 0; }
+.guide strong { color: var(--ink); }
+
+/* langkah bernomor — "cara pakai" */
+.howto { counter-reset: howto; }
+.howto .how {
+  counter-increment: howto;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: var(--space-2xs);
+  border-bottom: 1px dotted var(--line-2);
+  padding: var(--space-s) 0;
+}
+.howto .how:first-child { padding-top: 0; }
+.howto .how:last-child { border-bottom: 0; padding-bottom: 0; }
+.howto .how::before {
+  content: counter(howto, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent);
+}
+.howto h4 { font-size: var(--step-0); margin-bottom: var(--space-3xs); }
+.howto p { font-size: var(--step--1); color: var(--ink-2); margin: 0; }
+.howto strong { color: var(--ink); }
+
+/* judul bagian keluaran kalkulator */
+.out-title {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+  margin: 0 0 var(--space-2xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+.out-title::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dotted var(--line-2);
+}
+.form-legend {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  margin: 0;
+  border-bottom: var(--border);
+  padding-bottom: var(--space-2xs);
+}
+
+/* tutorial kalkulator */
+.calc-help { margin-bottom: var(--space-l); }
+.mode-guide {
+  border: var(--border-2);
+  background: var(--surface);
+  padding: var(--space-2xs) var(--space-m);
+  margin-top: var(--space-m);
+}
+.mode-guide summary {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: var(--space-2xs) 0;
+}
+.mode-guide summary:hover { color: var(--ink); }
+.mode-guide .mg {
+  border-top: 1px dotted var(--line-2);
+  padding: var(--space-s) 0;
+  font-size: var(--step--1);
+}
+.mode-guide .mg:last-child { padding-bottom: var(--space-3xs); }
+.mode-guide .mg h4 {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-3xs);
+}
+.mode-guide .mg p { color: var(--ink-2); margin: 0 0 var(--space-3xs); }
+.mode-guide .mg p:last-child { margin-bottom: 0; }
+.mode-guide .mg strong { color: var(--ink); }

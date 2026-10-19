@@ -1,18 +1,33 @@
 # -*- coding: utf-8 -*-
 """Generate multi-page site from the single-page source scripts/single.html.
 
+ARsip penting: sejak penambahan mode gelap/terang, tombol tema, tutorial
+kalkulator, dan blok penjelasan per halaman, kelima halaman di root dirawat
+LANGSUNG (bukan lagi hasil generate dari scripts/single.html). Jalankan
+skrip ini hanya kalau kamu sengaja ingin membangun ulang dari snapshot lama —
+skrip akan menolak berjalan kecuali diberi --force, karena hasil generate
+akan menghapus semua tambahan tersebut.
+
 Pages produced (in repo root):
-  index.html       — Beranda (hero + kartu akses cepat)
+  index.html       — Beranda (hero + kartu akses cepat + cara pakai)
   materi.html      — Bab 1-7
   rumus.html       — Kumpulan rumus (tombol prefill ke kalkulator)
   kasus.html       — 8 studi kasus (tombol prefill ke kalkulator)
-  kalkulator.html  — Kalkulator 8 mode
+  kalkulator.html  — Kalkulator 8 mode + tutorial
 
 Sumber (scripts/single.html) adalah snapshot halaman tunggal lama;
 jalankan ulang script ini hanya kalau sumber itu yang diedit.
 """
 import pathlib
 import re
+import sys
+
+if "--force" not in sys.argv:
+    raise SystemExit(
+        "DIBATALKAN: kelima halaman root kini dirawat langsung (single.html sudah "
+        "ketinggalan — tidak ada tombol tema/tutorial/penjelasan di dalamnya).\n"
+        "Kalau yakin ingin membangun ulang dari snapshot lama, jalankan:\n"
+        "  python scripts/build_pages.py --force")
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "scripts" / "single.html"

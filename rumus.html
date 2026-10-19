@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rumus Ekonomi Mikro — Kumpulan Rumus</title>
 <meta name="description" content="Kumpulan rumus Ekonomi Mikro: permintaan penawaran, keseimbangan, elastisitas, surplus, utilitas, produksi, biaya, laba dan diskriminasi harga lengkap dengan rumus pendukung.">
+<script>
+  /* terapkan tema tersimpan sebelum halaman dicat — hindari kedip */
+  (function () {
+    try {
+      var t = localStorage.getItem("ek-theme");
+      if (!t) t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    } catch (e) {}
+  })();
+</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4efe4'/%3E%3Cpath d='M4 26 L28 6' stroke='%23b4432e' stroke-width='3' fill='none'/%3E%3Cpath d='M4 6 L28 26' stroke='%231e5f45' stroke-width='3' fill='none'/%3E%3C/svg%3E">
 </head>
@@ -21,6 +31,11 @@
       <a href="kasus.html">Kasus Nyata</a>
       <a href="kalkulator.html">Kalkulator</a>
     </nav>
+    <button class="theme-btn" type="button" data-theme-toggle aria-label="Ganti mode terang atau gelap" aria-pressed="false" title="Mode terang / gelap">
+      <svg class="ic ic-moon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 9.8A5.6 5.6 0 0 1 6.2 3 5.7 5.7 0 1 0 13 9.8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <svg class="ic ic-sun" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2 3.4 12.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="theme-btn-txt">Gelap</span>
+    </button>
   </div>
 </header>
 
@@ -33,6 +48,35 @@
       <p class="eyebrow">Bagian 2</p>
       <h2>Lembar Rumus</h2>
       <p class="desc">Semua rumus yang dipakai di catatan ini, dikelompokkan per topik. Tombol di kanan mengirim angka contoh langsung ke mode kalkulator yang sesuai.</p>
+    </div>
+
+    <aside class="guide" aria-label="Petunjuk lembar rumus">
+      <p class="g-title">Cara memakai lembar rumus ini</p>
+      <ul>
+        <li>Rumus dikelompokkan A&ndash;H mengikuti urutan bab di materi &mdash; cari nama rumus di kolom kiri, rumusnya di kolom tengah.</li>
+        <li>Tombol <span class="mono">pakai</span> di kolom kanan membuka kalkulator dengan mode dan angka contoh sudah terisi &mdash; ganti angkanya dengan angka soalmu.</li>
+        <li>Simbol dipakai konsisten di seluruh situs; daftar lengkapnya di tabel bawah.</li>
+        <li>Saat mengetik angka di kalkulator gunakan titik sebagai desimal (<span class="mono">0.75</span>); hasil ditulis gaya Indonesia (koma desimal).</li>
+      </ul>
+    </aside>
+
+    <div class="table-wrap" style="margin-bottom:var(--space-xl)">
+      <table class="t">
+        <caption>Daftar simbol yang dipakai di seluruh halaman</caption>
+        <thead>
+          <tr><th>Simbol</th><th>Arti</th><th>Simbol</th><th>Arti</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="n">P</td><td>Harga</td><td class="n">Q</td><td>Kuantitas (jumlah barang)</td></tr>
+          <tr><td class="n">Qd, Qs</td><td>Kuantitas diminta &amp; kuantitas ditawarkan</td><td class="n">a, b, c, d</td><td>Koefisien fungsi linear: Qd = a &minus; bP, Qs = c + dP</td></tr>
+          <tr><td class="n">P*, Q*</td><td>Harga &amp; kuantitas keseimbangan</td><td class="n">t / s</td><td>Pajak / subsidi per unit</td></tr>
+          <tr><td class="n">Pb, Ps</td><td>Harga dibayar pembeli / harga diterima penjual</td><td class="n">CS / PS</td><td>Surplus konsumen / surplus produsen</td></tr>
+          <tr><td class="n">Ep, Es</td><td>Elastisitas harga permintaan / penawaran</td><td class="n">TR / TC</td><td>Total pendapatan / total biaya</td></tr>
+          <tr><td class="n">MC, AC, AFC, AVC</td><td>Biaya marginal, rata-rata, tetap rata-rata, variabel rata-rata</td><td class="n">TP, AP, MP</td><td>Produksi total, rata-rata, marginal</td></tr>
+          <tr><td class="n">MUx, MRSxy</td><td>Utilitas marginal barang X; laju substitusi marginal X untuk Y</td><td class="n">&pi;</td><td>Laba (TR &minus; TC)</td></tr>
+          <tr><td class="n">&lambda;</td><td>Nilai guna marginal uang (utilitas per rupiah)</td><td class="n">MR</td><td>Penerimaan marginal (tambahan pendapatan per unit)</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="formula-groups">
@@ -132,6 +176,7 @@
   </div>
 </footer>
 
+<script src="js/theme.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/app.js"></script>
 </body>
