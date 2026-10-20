@@ -207,9 +207,7 @@
               "Pb = m×Pmin + w = " + nice(m) + "×" + nice(Pmin) + " + (" + nice(w) + ") = " + nice(pbFl),
               { left: "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdF), note: "permintaan pada harga yang dibayar pembeli" },
               { left: "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsF), note: "penawaran pada jaminan Pmin" },
-              excess >= 0
-                : { left: "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit", note: "di atas harga itu penjual ingin menjual lebih banyak daripada yang laku" }
-                : { left: "Kelangkaan = Qd − Qs = " + nice(-excess) + " unit", note: "permintaan melampaui penawaran" },
+              (excess >= 0 ? { left: "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit", note: "di atas harga itu penjual ingin menjual lebih banyak daripada yang laku" } : { left: "Kelangkaan = Qd − Qs = " + nice(-excess) + " unit", note: "permintaan melampaui penawaran" }),
               v.govBuy
                 : { left: "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost), note: "hanya jika pemerintah menyerap kelebihan (centang)" }
                 : { left: "Yang terjual = min(Qd, Qs) = " + nice(Qt), note: "sisa produksi menumpuk — tidak ada yang membeli" }
