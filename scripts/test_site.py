@@ -76,23 +76,50 @@ def main():
             check(n_steps >= 3, "mode %s: langkah penyelesaian muncul (%d)" % (key, n_steps))
             check(n_charts >= 1 and n_svg >= 1, "mode %s: grafik SVG muncul (%d)" % (key, n_charts))
             check(len(status) > 10, "mode %s: kesimpulan tampil" % key)
+            n_why = page.locator("#calc-steps li .st-why").count()
+            check(n_why == n_steps, "mode %s: tiap langkah punya penjelasan (%d/%d)" % (key, n_why, n_steps))
+            check(page.locator("#calc-steps .st-tag").count() >= 1, "mode %s: tag hasil ringkas tampil" % key)
+            bad_overflow = page.evaluate("""() => {
+              const els = document.querySelectorAll('#calc-steps .st-lines');
+              let bad = 0;
+              els.forEach(function (e) { if (e.scrollWidth > e.clientWidth + 1) bad++; });
+              return bad;
+            }""")
+            check(bad_overflow == 0, "mode %s: baris rumus tanpa scroll samping (bad=%d)" % (key, bad_overflow))
             check(not errors, "mode %s: tanpa error JS (%s)" % (key, "; ".join(errors[:2])))
 
-        # ---------- 4. field muncul-hilang sesuai pilihan ----------
+        # ---------- 4. kebijakan multi: checkbox muncul-hilang + kombinasi ----------
         errors.clear()
         tabs.nth(0).click()
-        page.select_option("#f-keseimbangan-policy", "pajak")
-        check(page.locator("#w-keseimbangan-t").is_visible(), "keseimbangan: field pajak muncul saat pilih 'pajak'")
+        # UI langkah penyelesaian: penjelasan, tag hasil ringkas, tanpa scroll samping
+        n_why = page.locator("#calc-steps .st-why").count()
+        check(n_why >= 3, "keseimbangan: tiap langkah punya penjelasan why (%d)" % n_why)
+        n_tag = page.locator("#calc-steps .st-tag").count()
+        check(n_tag >= 1, "keseimbangan: tag hasil ringkas tampil (%d)" % n_tag)
+        bad_overflow = page.evaluate("""() => {
+          const els = document.querySelectorAll('#calc-steps .st-lines');
+          let bad = 0;
+          els.forEach(function (e) { if (e.scrollWidth > e.clientWidth + 1) bad++; });
+          return bad;
+        }""")
+        check(bad_overflow == 0, "keseimbangan: baris rumus tanpa scroll samping (bad=%d)" % bad_overflow)
+        page.check("#f-keseimbangan-pol_pajak")
+        check(page.locator("#w-keseimbangan-t").is_visible(), "keseimbangan: field pajak muncul saat centang 'pajak per unit'")
         page.fill("#f-keseimbangan-t", "1.25")
         page.wait_for_timeout(500)
         res_txt = page.locator("#calc-results").inner_text()
         check("16,4" in res_txt, "keseimbangan: pajak 1.25 -> Pb naik ke 16,42")
-        page.select_option("#f-keseimbangan-policy", "floor")
-        check(page.locator("#w-keseimbangan-Pmin").is_visible(), "keseimbangan: field floor muncul")
+        page.check("#f-keseimbangan-pol_floor")
+        check(page.locator("#w-keseimbangan-Pmin").is_visible(), "keseimbangan: field floor muncul (bisa dikombinasi dengan pajak)")
+        page.fill("#f-keseimbangan-Pmin", "14")
+        page.wait_for_timeout(500)
+        check("pajak" in page.locator("#calc-status").inner_text().lower(), "keseimbangan: status menyebut kebijakan kombinasi aktif")
+        check("16,4" in page.locator("#calc-results").inner_text(), "keseimbangan: kombinasi pajak+floor (floor di bawah Ps) tetap Pb 16,4")
+        page.fill("#f-keseimbangan-Pmin", "18")
         page.wait_for_timeout(500)
         floor_txt = page.locator("#calc-results").inner_text().lower()
-        check("kelebihan penawaran" in floor_txt, "keseimbangan: floor -> kartu kelebihan penawaran tampil")
-        check("biaya pembelian pemerintah" in floor_txt, "keseimbangan: floor -> biaya pembelian tampil")
+        check("kelebihan penawaran" in floor_txt, "keseimbangan: floor mengikat -> kartu kelebihan penawaran tampil")
+        check("biaya pembelian pemerintah" in floor_txt, "keseimbangan: floor mengikat -> biaya pembelian tampil")
         check(not errors, "interaksi kebijakan tanpa error JS")
 
         # ---------- 5. sub-mode elastisitas ----------

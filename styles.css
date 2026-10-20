@@ -767,17 +767,45 @@ table.t tbody tr:hover { background: var(--tint); }
   color: var(--accent);
   font-weight: 700;
 }
-.steps .st-label { font-size: var(--step--1); color: var(--ink-2); display: block; }
+.steps .st-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2xs);
+}
+.steps .st-label { font-size: var(--step--1); color: var(--ink-2); }
+.steps .st-tag {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+/* baris rumus mengalir berdampingan — baru turun baris kalau penuh */
+.steps .st-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-s);
+  margin: var(--space-3xs) 0;
+}
 .steps .st-line {
   font-family: var(--font-mono);
   font-size: var(--step-0);
   color: var(--ink);
-  display: block;
   white-space: pre-wrap;
-  overflow-x: auto;
+  overflow-wrap: break-word;
   line-height: 1.65;
+  /* boleh menyusut & membungkus di dalam kolom: penyebab utama scroll samping hilang */
+  max-width: 100%;
+  min-width: 0;
 }
-.steps .st-line.result-line { color: var(--accent); font-weight: 700; }
+/* penjelasan: diapain, kenapa, dari mana angkanya */
+.steps .st-why {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  margin: 0 0 var(--space-3xs);
+  max-width: var(--measure);
+}
 
 .notes { font-size: var(--step--1); color: var(--ink-2); display: grid; gap: var(--space-3xs); }
 .notes .note { border-left: 3px solid var(--amber); padding-left: var(--space-2xs); }
@@ -1018,6 +1046,18 @@ html[data-theme="dark"] .theme-btn .ic-moon { display: none; }
   border-bottom: var(--border);
   padding-bottom: var(--space-2xs);
 }
+/* judul kelompok input + kolom turunan (mis. besaran t setelah centang pajak) */
+.form-group {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  border-bottom: var(--border);
+  padding-bottom: var(--space-3xs);
+  margin: var(--space-2xs) 0 0;
+}
+.field.dep { margin-left: var(--space-m); }
 
 /* tutorial kalkulator */
 .calc-help { margin-bottom: var(--space-l); }

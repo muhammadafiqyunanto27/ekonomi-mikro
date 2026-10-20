@@ -62,31 +62,26 @@
   MODES.keseimbangan = {
     label: "Keseimbangan Pasar",
     title: "Keseimbangan Pasar — permintaan, penawaran, dan kebijakan",
-    desc: "Qd = a − bP dan Qs = c + dP. Cari harga & kuantitas keseimbangan, lalu tambahkan kebijakan: pajak per unit, pajak persen, subsidi, harga minimum, harga maksimum, atau kuota.",
+    desc: "Qd = a − bP dan Qs = c + dP. Cari keseimbangan murni, lalu kombinasikan kebijakan apa pun sekaligus: pajak per unit, pajak persen, subsidi, harga minimum, harga maksimum, atau kuota — semuanya bisa dicentang bersamaan.",
     fields: [
       { id: "a", label: "Intersep permintaan (a)", def: 200, hint: "Qd = a − bP · konstanta saat P = 0" },
       { id: "b", label: "Kemiringan permintaan (b)", def: 10, hint: "harus &gt; 0" },
       { id: "c", label: "Intersep penawaran (c)", def: -40, hint: "Qs = c + dP · biasa negatif" },
       { id: "d", label: "Kemiringan penawaran (d)", def: 5, hint: "harus &gt; 0" },
-      {
-        id: "policy", label: "Kebijakan pemerintah", def: "none", type: "select",
-        options: [
-          ["none", "tanpa kebijakan (keseimbangan murni)"],
-          ["pajak", "pajak per unit (t)"],
-          ["pajakprosen", "pajak persentase (k %)"],
-          ["subsidi", "subsidi per unit (s)"],
-          ["floor", "harga minimum / floor price"],
-          ["ceiling", "harga maksimum / ceiling price"],
-          ["kuota", "kuota produksi (Q̄)"]
-        ]
-      },
-      { id: "t", label: "Pajak per unit (t)", def: 3, when: function (v) { return v.policy === "pajak"; } },
-      { id: "k", label: "Pajak persen (%)", def: 20, when: function (v) { return v.policy === "pajakprosen"; } },
-      { id: "s", label: "Subsidi per unit (s)", def: 3, when: function (v) { return v.policy === "subsidi"; } },
-      { id: "Pmin", label: "Harga minimum (floor)", def: 18, when: function (v) { return v.policy === "floor"; } },
-      { id: "govBuy", label: "Pemerintah membeli kelebihan (surplus) itu", def: true, type: "check", when: function (v) { return v.policy === "floor"; } },
-      { id: "Pmax", label: "Harga maksimum (ceiling)", def: 12, when: function (v) { return v.policy === "ceiling"; } },
-      { id: "Qbar", label: "Kuota produksi (Q̄)", def: 30, when: function (v) { return v.policy === "kuota"; } },
+      { heading: "Kebijakan pemerintah — boleh dikombinasikan" },
+      { id: "pol_pajak", label: "Pajak per unit (t)", type: "check", def: false },
+      { id: "t", label: "t =", def: 3, dep: true, when: function (v) { return v.pol_pajak; } },
+      { id: "pol_persen", label: "Pajak persen (k %)", type: "check", def: false },
+      { id: "k", label: "k (%) =", def: 20, dep: true, when: function (v) { return v.pol_persen; } },
+      { id: "pol_subsidi", label: "Subsidi per unit (s)", type: "check", def: false },
+      { id: "s", label: "s =", def: 3, dep: true, when: function (v) { return v.pol_subsidi; } },
+      { id: "pol_floor", label: "Harga minimum / floor (melindungi produsen)", type: "check", def: false },
+      { id: "Pmin", label: "Pmin =", def: 18, dep: true, when: function (v) { return v.pol_floor; } },
+      { id: "govBuy", label: "Pemerintah membeli kelebihan (surplus) itu", type: "check", def: true, dep: true, when: function (v) { return v.pol_floor; } },
+      { id: "pol_ceiling", label: "Harga maksimum / ceiling (melindungi pembeli)", type: "check", def: false },
+      { id: "Pmax", label: "Pmax =", def: 12, dep: true, when: function (v) { return v.pol_ceiling; } },
+      { id: "pol_kuota", label: "Kuota produksi (Q̄)", type: "check", def: false },
+      { id: "Qbar", label: "Q̄ =", def: 30, dep: true, when: function (v) { return v.pol_kuota; } },
       { id: "surplus", label: "Tampilkan daerah surplus konsumen &amp; produsen", def: true, type: "check" }
     ],
     compute: function (v) {
@@ -94,265 +89,317 @@
       if (!ok(a, b, c, d)) throw "Isi keempat koefisien permintaan dan penawaran dengan angka.";
       if (!(b > 0) || !(d > 0)) throw "Koefisien b (permintaan) dan d (penawaran) harus lebih besar dari 0.";
 
-      var policy = v.policy || "none";
+      /* kebijakan yang dicentang — boleh lebih dari satu sekaligus */
+      var onPajak = !!v.pol_pajak, onPersen = !!v.pol_persen, onSub = !!v.pol_subsidi;
+      var onFloor = !!v.pol_floor, onCeil = !!v.pol_ceiling, onKuota = !!v.pol_kuota;
+      var t = onPajak ? v.t : 0, kpersen = onPersen ? v.k : 0, s = onSub ? v.s : 0;
+      if (onPajak && !(t > 0)) throw "Pajak per unit (t) harus lebih besar dari 0.";
+      if (onPersen && !(kpersen > 0)) throw "Pajak persen (k) harus lebih besar dari 0.";
+      if (onSub && !(s > 0)) throw "Subsidi per unit (s) harus lebih besar dari 0.";
+      var Pmin = v.Pmin, Pmax = v.Pmax, Qbar = v.Qbar;
+      if (onFloor && !ok(Pmin)) throw "Isi besaran harga minimum (Pmin).";
+      if (onCeil && !ok(Pmax)) throw "Isi besaran harga maksimum (Pmax).";
+      if (onKuota && !(Qbar > 0)) throw "Kuota produksi (Q̄) harus lebih besar dari 0.";
+      if (onFloor && onCeil && ok(Pmin, Pmax) && Pmin > Pmax) {
+        throw "Harga minimum (" + nice(Pmin) + ") lebih tinggi daripada harga maksimum (" + nice(Pmax) +
+          ") — mustahil dipenuhi pasar. Turunkan salah satu.";
+      }
+
       var den = b + d;
       var Pe = (a - c) / den, Qe = a - b * Pe;
       var choke = a / b, Ps0 = -c / d;
-      var Pb = Pe, Ps = Pe, Qt = Qe, QtProd = Qe;
+      var hasFiscal = onPajak || onPersen || onSub;
+      var w = t - s;             /* belah ketupat tetap per unit: pajak +, subsidi − */
+      var m = 1 + kpersen / 100; /* pengali pajak persen: Pb = m·Ps + w */
+
+      var Pb = Pe, Ps = Pe, Qt = Qe, Qprod = Qe;   /* Qprod = kuantitas yang benar-benar diproduksi */
       var excess = 0, excessType = "", govCost = 0, rev = 0, wedge = 0;
-      var status = "";
-      var steps = [], notes = [];
+      var floorBind = false, ceilBind = false, kuotaBind = false;
+      var notes = [], steps = [];
+      var policies = [];
+      if (onPajak) policies.push("pajak " + nice(t) + "/unit");
+      if (onPersen) policies.push("pajak " + nice(kpersen) + "%");
+      if (onSub) policies.push("subsidi " + nice(s) + "/unit");
+      if (onFloor) policies.push("floor " + nice(Pmin));
+      if (onCeil) policies.push("ceiling " + nice(Pmax));
+      if (onKuota) policies.push("kuota " + nice(Qbar));
 
       steps.push({
-        label: "Permintaan dan penawaran",
+        label: "Fungsi permintaan & penawaran yang dipakai",
         lines: [
-          "Qd = " + nice(a) + " − " + nice(b) + "P        Qs = " + nice(c) + " + " + nice(d) + "P"
-        ]
+          "Qd = " + nice(a) + " − " + nice(b) + "P",
+          "Qs = " + nice(c) + " + " + nice(d) + "P"
+        ],
+        why: "Empat angka ini kamu ketik di kolom kiri (a, b, c, d). Bentuknya linear: makin tinggi harga makin sedikit yang diminta (kemiringan −b) dan makin banyak yang ditawarkan (kemiringan +d). Kurva di grafik memakai persamaan ini persis — angkanya ikut berubah kalau kamu ganti input."
       });
       steps.push({
         label: "Keseimbangan murni: Qd = Qs",
         lines: [
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
-          nice(a) + " − (" + nice(c) + ") = " + nice(b) + "P + " + nice(d) + "P",
-          nice(a - c) + " = " + nice(den) + "P",
+          nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P = " + nice(den) + "P",
           "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe),
-          "Q* = " + nice(a) + " − " + nice(b) + "(" + nice(Pe) + ") = " + nice(Qe)
+          "Q* = " + nice(a) + " − " + nice(b) + "×" + nice(Pe) + " = " + nice(Qe)
         ],
-        result: true
+        result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
+        why: "Keseimbangan ada di harga yang membuat jumlah diminta sama dengan jumlah ditawarkan, jadi kedua ruas disamakan. P dikeluarkan dari faktor (b + d), lalu P* disubstitusikan balik untuk mendapatkan Q*. Dua angka ini jadi patokan pembanding semua kebijakan di bawah."
       });
 
-      if (policy === "pajak") {
-        var t = v.t;
-        if (!(t > 0)) throw "Pajak per unit harus lebih besar dari 0.";
-        Ps = (a - c - b * t) / den;
-        Pb = Ps + t;
-        Qt = a - b * Pb;
-        rev = t * Qt;
-        wedge = t;
+      if (hasFiscal) {
+        var psF = (a - c - b * w) / (d + b * m);
+        var pbF = m * psF + w;
+        var qF = a - b * pbF;
         steps.push({
-          label: "Pajak per unit: pembeli bayar lebih tinggi daripada yang diterima penjual",
+          label: "Geser penawaran lewat belah ketupat harga: Pb = m·Ps + w",
           lines: [
-            "Pb = Ps + t        (t = " + nice(t) + ")",
-            nice(a) + " − " + nice(b) + "(Ps + " + nice(t) + ") = " + nice(c) + " + " + nice(d) + "Ps",
-            nice(a - c - b * t) + " = " + nice(den) + "Ps",
-            "Ps = " + nice(a - c - b * t) + " : " + nice(den) + " = " + nice(Ps),
-            "Pb = " + nice(Ps) + " + " + nice(t) + " = " + nice(Pb),
-            "Q = " + nice(a) + " − " + nice(b) + "(" + nice(Pb) + ") = " + nice(Qt)
+            "w = t − s = " + nice(t) + (onSub ? " − " + nice(s) : " − 0") + " = " + nice(w) + "   (belah ketupat per unit)",
+            "m = 1 + k/100 = " + nice(m) + "   (pengali pajak persen)",
+            nice(a) + " − " + nice(b) + "(" + nice(m) + "Ps + (" + nice(w) + ")) = " + nice(c) + " + " + nice(d) + "Ps",
+            nice(a - c - b * w) + " = " + nice(d + b * m) + "Ps",
+            "Ps = " + nice(a - c - b * w) + " : " + nice(d + b * m) + " = " + nice(psF),
+            "Pb = " + nice(m) + " × " + nice(psF) + " + (" + nice(w) + ") = " + nice(pbF),
+            "Q = " + nice(a) + " − " + nice(b) + "×" + nice(pbF) + " = " + nice(qF)
           ],
-          result: true
+          result: "Pb = " + nice(pbF) + " · Ps = " + nice(psF) + " · Q = " + nice(qF),
+          why: "Pajak atau subsidi membuat pembeli dan penjual melihat harga yang berbeda: selisihnya dikunci belah ketupat w per unit, sedangkan pajak persen mengali harga penjual lewat m. Angka w dan m berasal dari kolom t, s, k yang kamu centang. Hubungan Pb = m·Ps + w disubstitusikan ke Qd = Qs sehingga tersisa satu variabel (Ps), lalu Pb dan Q dihitung menyusul."
         });
-        steps.push({
-          label: "Penerimaan pajak dan beban pihak-pihak",
-          lines: [
-            "Penerimaan pemerintah = t × Q = " + nice(t) + " × " + nice(Qt) + " = " + nice(rev),
-            "Beban konsumen per unit = Pb − P* = " + nice(Pb) + " − " + nice(Pe) + " = " + nice(Pb - Pe),
-            "Beban produsen per unit = P* − Ps = " + nice(Pe) + " − " + nice(Ps) + " = " + nice(Pe - Ps)
-          ]
-        });
-        status = "Pajak " + nice(t) + " per unit membuat harga pembeli naik ke " + nice(Pb) +
-          " dan harga penjual turun ke " + nice(Ps) + "; kuantitas pasar menyusut dari " + nice(Qe) + " ke " + nice(Qt) + ".";
-      } else if (policy === "pajakprosen") {
-        var k = v.k;
-        if (!(k > 0)) throw "Persentase pajak harus lebih besar dari 0.";
-        var m = 1 + k / 100;
-        Ps = (a - c) / (b * m + d);
-        Pb = Ps * m;
-        Qt = a - b * Pb;
-        rev = (Pb - Ps) * Qt;
+        Pb = pbF; Ps = psF; Qt = qF; Qprod = qF;
         wedge = Pb - Ps;
+        rev = wedge * Qt;
         steps.push({
-          label: "Pajak persentase: Pb = Ps (1 + k)",
+          label: "Sebaran beban dan penerimaan pemerintah",
           lines: [
-            "Pb = Ps (1 + " + nice(k / 100) + ") = " + nice(m) + " Ps",
-            nice(a) + " − " + nice(b) + "(" + nice(m) + " Ps) = " + nice(c) + " + " + nice(d) + " Ps",
-            nice(a - c) + " = (" + nice(b * m) + " + " + nice(d) + ") Ps = " + nice(b * m + d) + " Ps",
-            "Ps = " + nice(a - c) + " : " + nice(b * m + d) + " = " + nice(Ps),
-            "Pb = " + nice(m) + " × " + nice(Ps) + " = " + nice(Pb),
-            "Q = " + nice(a) + " − " + nice(b) + "(" + nice(Pb) + ") = " + nice(Qt)
+            "Pajak per unit efektif = Pb − Ps = " + nice(Pb) + " − " + nice(Ps) + " = " + nice(wedge),
+            (rev >= 0 ? "Penerimaan pemerintah = " : "Biaya pemerintah (subsidi) = ") +
+              nice(wedge) + " × " + nice(Qt) + " = " + nice(Math.abs(rev)),
+            "Pembeli menanggung/menerima per unit = Pb − P* = " + nice(Pb) + " − " + nice(Pe) + " = " + nice(Pb - Pe),
+            "Penjual menanggung/menerima per unit = P* − Ps = " + nice(Pe) + " − " + nice(Ps) + " = " + nice(Pe - Ps)
           ],
-          result: true
+          why: "Dibanding keseimbangan murni P*, pembeli membayar lebih mahal (atau lebih murah saat subsidi) dan penjual menerima lebih sedikit (atau lebih banyak). Selisih Pb − P* dan P* − Ps inilah ukuran siapa menanggung beban kebijakan; besarnya dibagi menurut kemiringan kedua kurva — makin tegak suatu kurva, makin kecil beban di pihak itu."
         });
-        steps.push({
-          label: "Penerimaan pajak",
-          lines: [
-            "Pajak per unit = Pb − Ps = " + nice(Pb) + " − " + nice(Ps) + " = " + nice(Pb - Ps),
-            "Penerimaan = (Pb − Ps) × Q = " + nice(Pb - Ps) + " × " + nice(Qt) + " = " + nice(rev)
-          ]
-        });
-        status = "Pajak " + nice(k) + "% membebani harga jual: pembeli membayar " + nice(Pb) +
-          ", penjual menerima " + nice(Ps) + ".";
-      } else if (policy === "subsidi") {
-        var s = v.s;
-        if (!(s > 0)) throw "Subsidi per unit harus lebih besar dari 0.";
-        Pb = (a - c - d * s) / den;
-        Ps = Pb + s;
-        Qt = a - b * Pb;
-        rev = s * Qt;
-        wedge = s;
-        steps.push({
-          label: "Subsidi per unit: penjual menerima lebih tinggi daripada yang dibayar pembeli",
-          lines: [
-            "Ps = Pb + s        (s = " + nice(s) + ")",
-            nice(a) + " − " + nice(b) + "Pb = " + nice(c) + " + " + nice(d) + "(Pb + " + nice(s) + ")",
-            nice(a - c - d * s) + " = " + nice(den) + "Pb",
-            "Pb = " + nice(a - c - d * s) + " : " + nice(den) + " = " + nice(Pb),
-            "Ps = " + nice(Pb) + " + " + nice(s) + " = " + nice(Ps),
-            "Q = " + nice(a) + " − " + nice(b) + "(" + nice(Pb) + ") = " + nice(Qt)
-          ],
-          result: true
-        });
-        steps.push({
-          label: "Biaya subsidi",
-          lines: [
-            "Biaya pemerintah = s × Q = " + nice(s) + " × " + nice(Qt) + " = " + nice(rev),
-            "Konsumen hemat per unit = P* − Pb = " + nice(Pe - Pb),
-            "Produsen terima lebih per unit = Ps − P* = " + nice(Ps - Pe)
-          ]
-        });
-        status = "Subsidi " + nice(s) + " per unit menurunkan harga yang dibayar konsumen ke " + nice(Pb) +
-          " dan menaikkan kuantitas ke " + nice(Qt) + " — tetapi negara mengeluarkan " + nice(rev) + ".";
-      } else if (policy === "floor") {
-        var pf = v.Pmin;
-        if (!ok(pf)) throw "Isi besaran harga minimum.";
-        var Qd = a - b * pf, Qs = c + d * pf;
-        Pb = pf; Ps = pf;
-        if (pf <= Pe) {
-          status = "Harga minimum " + nice(pf) + " berada di bawah harga keseimbangan " + nice(Pe) +
-            " → kebijakan TIDAK mengikat; pasar tetap berjalan di keseimbangan.";
-          notes.push("Harga minimum hanya efektif bila ditetapkan di atas harga keseimbangan.");
-          Qt = Qe;
-        } else {
-          excess = Qs - Qd; excessType = "supply";
-          Qt = v.govBuy ? Qs : Qd;
-          QtProd = v.govBuy ? Qs : Qd;
-          govCost = v.govBuy ? pf * excess : 0;
-          status = "Harga minimum efektif: pada " + nice(pf) + ", Qd = " + nice(Qd) + " dan Qs = " + nice(Qs) +
-            " → kelebihan penawaran " + nice(excess) + " unit.";
-          if (v.govBuy) {
-            status += " Pemerintah menyerap kelebihan itu dengan biaya " + nice(govCost) + ".";
-          } else {
-            notes.push("Tanpa pembelian pemerintah, hanya sebanyak permintaan (" + nice(Qd) +
-              ") yang benar-benar terjual; sisa produksi menumpuk.");
-          }
+      }
+
+      if (onFloor) {
+        floorBind = Pmin > Ps;
+        if (!floorBind) {
           steps.push({
-            label: "Hitung Qd dan Qs pada harga minimum",
+            label: "Uji harga minimum (floor)",
             lines: [
-              "Qd(" + nice(pf) + ") = " + nice(a) + " − " + nice(b) + "(" + nice(pf) + ") = " + nice(Qd),
-              "Qs(" + nice(pf) + ") = " + nice(c) + " + " + nice(d) + "(" + nice(pf) + ") = " + nice(Qs),
-              "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit",
+              "Pmin = " + nice(Pmin) + " versus harga penjual yang berlaku = " + nice(Ps),
+              "Pmin ≤ Ps → TIDAK mengikat"
+            ],
+            why: "Harga minimum hanya mengubah pasar bila ditetapkan di atas harga yang sudah diterima penjual. Kalau di bawahnya, aturan ini tidak memaksa apa pun dan pasar tetap di titik yang sudah dihitung."
+          });
+          notes.push("Harga minimum hanya efektif bila di atas harga penjual yang berlaku.");
+        } else {
+          var pbFl = m * Pmin + w;
+          var qdF = a - b * pbFl, qsF = c + d * Pmin;
+          excess = qsF - qdF; excessType = excess >= 0 ? "supply" : "demand";
+          Qt = v.govBuy ? qsF : Math.min(qdF, qsF);
+          Qprod = v.govBuy ? qsF : Qt;
+          govCost = v.govBuy && excess > 0 ? Pmin * excess : 0;
+          Pb = pbFl; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
+          steps.push({
+            label: "Floor mengikat: kunci harga penjual di Pmin",
+            lines: [
+              "Ps dikunci = Pmin = " + nice(Pmin),
+              "Pb = m×Pmin + w = " + nice(m) + "×" + nice(Pmin) + " + (" + nice(w) + ") = " + nice(pbFl),
+              "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdF),
+              "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsF),
+              excess >= 0
+                ? "Kelebihan penawaran = Qs − Qd = " + nice(qsF) + " − " + nice(qdF) + " = " + nice(excess) + " unit"
+                : "Kelangkaan = Qd − Qs = " + nice(qdF) + " − " + nice(qsF) + " = " + nice(-excess) + " unit",
               v.govBuy
-                ? "Biaya pembelian pemerintah = " + nice(pf) + " × " + nice(excess) + " = " + nice(govCost)
-                : "Terjual hanya sebanyak Qd = " + nice(Qd) + " unit"
+                ? "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost)
+                : "Yang terjual = min(Qd, Qs) = " + nice(Qt) + " — sisa produksi menumpuk"
             ],
-            result: true
+            result: "Pb = " + nice(pbFl) + " · Ps = " + nice(Pmin) + " · Q = " + nice(Qt),
+            why: "Floor melindungi harga yang diterima produsen, jadi Ps dikunci di Pmin; pembeli tetap membayar Pb = m×Ps + w. Pada harga itu penjual ingin menjual lebih banyak daripada yang laku — itulah kelebihan penawaran. Pemerintah boleh menyerapnya (biaya = Pmin × kelebihan, silakan centang di kolom kiri) atau membiarkannya menumpuk sebagai rugi produsen."
           });
         }
-      } else if (policy === "ceiling") {
-        var pc = v.Pmax;
-        if (!ok(pc)) throw "Isi besaran harga maksimum.";
-        var Qd2 = a - b * pc, Qs2 = c + d * pc;
-        Pb = pc; Ps = pc;
-        if (pc >= Pe) {
-          status = "Harga maksimum " + nice(pc) + " berada di atas harga keseimbangan " + nice(Pe) +
-            " → kebijakan TIDAK mengikat; pasar tetap di keseimbangan.";
-          notes.push("Harga maksimum hanya efektif bila ditetapkan di bawah harga keseimbangan.");
-          Qt = Qe;
-        } else {
-          excess = Qd2 - Qs2; excessType = "demand";
-          Qt = Qs2;
-          status = "Harga maksimum efektif: pada " + nice(pc) + ", Qd = " + nice(Qd2) + " dan Qs = " + nice(Qs2) +
-            " → kelangkaan " + nice(excess) + " unit yang tidak terlayani.";
-          notes.push("Terjadi antrean / pembatasan pembelian. Pemerintah perlu memasok barang atau memberi subsidi agar pasokan cukup.");
+      }
+
+      if (onCeil) {
+        ceilBind = Pmax < Pb;
+        if (!ceilBind) {
           steps.push({
-            label: "Hitung Qd dan Qs pada harga maksimum",
+            label: "Uji harga maksimum (ceiling)",
             lines: [
-              "Qd(" + nice(pc) + ") = " + nice(a) + " − " + nice(b) + "(" + nice(pc) + ") = " + nice(Qd2),
-              "Qs(" + nice(pc) + ") = " + nice(c) + " + " + nice(d) + "(" + nice(pc) + ") = " + nice(Qs2),
-              "Kelangkaan (excess demand) = Qd − Qs = " + nice(excess) + " unit",
-              "Yang benar-benar terbeli = Qs = " + nice(Qs2) + " unit",
-              "Harga yang konsumen siap bayar pada Q = " + nice(Qs2) + " → " +
-                nice((a - Qs2) / b) + " (tekanan pasar gelap)"
+              "Pmax = " + nice(Pmax) + " versus harga pembeli yang berlaku = " + nice(Pb),
+              "Pmax ≥ Pb → TIDAK mengikat"
             ],
-            result: true
+            why: "Harga maksimum hanya mengikat bila lebih rendah daripada harga yang dibayar pembeli saat ini. Kalau di atasnya, aturan ini tidak mengubah apa pun."
           });
-        }
-      } else if (policy === "kuota") {
-        var qb = v.Qbar;
-        if (!(qb > 0)) throw "Kuota produksi harus lebih besar dari 0.";
-        if (qb >= Qe) {
-          status = "Kuota " + nice(qb) + " berada di atas kuantitas keseimbangan " + nice(Qe) +
-            " → TIDAK mengikat, produsen tidak perlu dipaksa mengurangi.";
-          Qt = Qe;
+          notes.push("Harga maksimum hanya efektif bila di bawah harga pembeli yang berlaku.");
         } else {
-          Pb = (a - qb) / b;
-          Ps = (qb - c) / d;
-          Qt = qb; QtProd = qb;
-          wedge = Pb - Ps;
-          status = "Kuota " + nice(qb) + " menaikkan harga ke " + nice(Pb) + " (dibaca dari kurva permintaan) " +
-            "sementara biaya marjinal penawaran hanya " + nice(Ps) + " → selisih " + nice(wedge) + " menjadi rent.";
-          notes.push("Karena produsen mengorbankan penjualan, biasanya perlu insentif finansial agar kuota dipatuhi.");
+          var pc = Pmax;
+          var qdC = a - b * pc;
+          var psC = (pc - w) / m;
+          if (floorBind && psC < Pmin) {
+            /* floor dan ceiling sama-sama mengikat — konflik harga */
+            var qsC2 = c + d * Pmin;
+            Qt = Math.min(qdC, qsC2); Qprod = Qt;
+            Pb = pc; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
+            excess = qsC2 - qdC; excessType = "supply";
+            notes.push("Floor dan ceiling sama-sama mengikat: pembeli dibatasi Pmax sementara penjual dijamin Pmin — kuantitas jadi yang terkecil di antara keduanya.");
+            steps.push({
+              label: "Floor + ceiling sama-sama mengikat (konflik harga)",
+              lines: [
+                "Pembeli dibatasi Pb = Pmax = " + nice(pc),
+                "Penjual dijamin Ps = Pmin = " + nice(Pmin),
+                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdC),
+                "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsC2),
+                "Kuantitas terjadi = min(Qd, Qs) = " + nice(Qt)
+              ],
+              result: "Pb = " + nice(pc) + " · Ps = " + nice(Pmin) + " · Q = " + nice(Qt),
+              why: "Kedua aturan saling menutup: pembeli tidak boleh membayar di atas Pmax, produsen tidak boleh menerima di bawah Pmin. Selisih Pb − Ps dipaksa oleh aturan, bukan lagi oleh belah ketupat, dan kuantitas pasar jadi yang terkecil di antara yang diminta dan yang ditawarkan."
+            });
+          } else {
+            var qsC = c + d * psC;
+            Qt = Math.min(qdC, qsC); Qprod = Qt;
+            excess = qdC - qsC; excessType = "demand";
+            Pb = pc; Ps = psC; wedge = Pb - Ps; rev = wedge * Qt;
+            steps.push({
+              label: "Ceiling mengikat: kunci harga pembeli di Pmax",
+              lines: [
+                "Pb dikunci = Pmax = " + nice(pc),
+                "Ps = (Pmax − w) / m = (" + nice(pc) + " − (" + nice(w) + ")) / " + nice(m) + " = " + nice(psC),
+                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdC),
+                "Qs(Ps) = " + nice(c) + " + " + nice(d) + "×" + nice(psC) + " = " + nice(qsC),
+                "Kelangkaan = Qd − Qs = " + nice(qdC) + " − " + nice(qsC) + " = " + nice(qdC - qsC) + " unit",
+                "Yang terbeli = Qs = " + nice(qsC) + " — sisanya antre / pasar gelap"
+              ],
+              result: "Pb = " + nice(pc) + " · Ps = " + nice(psC) + " · Q = " + nice(Qt),
+              why: "Ceiling membatasi harga yang dibayar pembeli, jadi Pb dikunci di Pmax dan penjual tinggal menerima Ps = (Pb − w)/m. Karena harga dipaksa murah, permintaan melonjak sementara penawaran menyusut → kelangkaan; barang yang benar-benar tersedia dibatasi penawaran (Qs)."
+            });
+          }
+        }
+      }
+
+      if (onKuota) {
+        if (!(Qbar < Qt - 1e-9)) {
           steps.push({
-            label: "Kunci harga dari dua sisi pada kuantitas kuota",
+            label: "Uji kuota produksi",
             lines: [
-              "Harga yang dibayar konsumen (dari kurva permintaan):",
-              "  Pb = (a − Q̄)/b = (" + nice(a) + " − " + nice(qb) + ") / " + nice(b) + " = " + nice(Pb),
-              "Harga minimum penjual (dari kurva penawaran):",
-              "  Ps = (Q̄ − c)/d = (" + nice(qb) + " − " + nice(c) + ") / " + nice(d) + " = " + nice(Ps),
-              "Selisih harga (rent) = " + nice(Pb) + " − " + nice(Ps) + " = " + nice(wedge)
+              "Q̄ = " + nice(Qbar) + " versus kuantitas yang berlaku = " + nice(Qt),
+              "Q̄ ≥ Q → TIDAK mengikat"
             ],
-            result: true
+            why: "Kuota hanya mengubah pasar bila lebih kecil daripada kuantitas yang memang terjadi; kalau di atas itu, produsen tetap bebas berproduksi seperti semula."
+          });
+          notes.push("Kuota di atas kuantitas yang berlaku tidak mengikat apa pun.");
+        } else {
+          var pq = Qbar;
+          var pbQ = (a - pq) / b;
+          var psMC = (pq - c) / d;
+          var psNet = (pbQ - w) / m;
+          var linesQ = [
+            "Kuantitas dikunci Q = Q̄ = " + nice(pq),
+            "Pb dari kurva permintaan: Pb = (a − Q̄)/b = (" + nice(a) + " − " + nice(pq) + ") / " + nice(b) + " = " + nice(pbQ),
+            "Ps (biaya marjinal di Q̄) = (Q̄ − c)/d = (" + nice(pq) + " − (" + nice(c) + ")) / " + nice(d) + " = " + nice(psMC)
+          ];
+          if (hasFiscal) {
+            linesQ.push("Ps setelah belah ketupat = (Pb − w)/m = (" + nice(pbQ) + " − (" + nice(w) + ")) / " + nice(m) + " = " + nice(psNet));
+          }
+          linesQ.push("Rent (selisih harga di kuota) = Pb − Ps = " + nice(pbQ) + " − " + nice(psMC) + " = " + nice(pbQ - psMC));
+          if (floorBind && psNet < Pmin) {
+            linesQ.push("Catatan: kantong produsen (" + nice(psNet) + ") di bawah floor " + nice(Pmin) + " → perlu jaminan tambahan, rent naik jadi " + nice(pbQ - Pmin));
+          }
+          if (excessType === "supply" && excess > 0) {
+            notes.push("Karena produksi dipaksa berhenti di Q̄, kelebihan penawaran dari tahap floor tidak lagi terjadi.");
+            excess = 0; excessType = ""; govCost = 0;
+          }
+          Qt = pq; Qprod = pq; Pb = pbQ; Ps = psMC; kuotaBind = true;
+          wedge = Pb - Ps; rev = hasFiscal ? (pbQ - psNet) * pq : 0;
+          steps.push({
+            label: "Kuota mengikat: kunci kuantitas di Q̄",
+            lines: linesQ,
+            result: "Pb = " + nice(pbQ) + " · Ps = " + nice(psMC) + " · Q = " + nice(pq),
+            why: "Kuota memaksa kuantitas pasar berhenti di Q̄. Harga pembeli dibaca dari kurva permintaan pada Q̄ (seberapa besar pembeli masih bersedia bayar), harga penjual dari biaya marjinal di titik itu. Selisihnya adalah 'rent' — keuntungan bagi pemegang izin kuota; produsen perlu insentif agar mau patuh mengurangi produksi."
           });
         }
-      } else {
-        status = "Pasar berada di keseimbangan: tidak ada kekuatan yang menekan harga naik atau turun.";
       }
 
       /* surplus & dwl pada kuantitas yang benar-benar terjadi */
-      var Qcs = policy === "ceiling" ? Qt : Qt;             /* konsumsi = kuantitas terjual */
-      var Qps = (policy === "floor" && !v.govBuy) ? Qt : QtProd;
+      var Qcs = Math.max(Math.min(Qt, a - b * Pb), 0);    /* konsumen beli Qd(Pb), bukan total produksi */
+      var Qps = Qprod;                                /* produksi = kuantitas yang dipasok */
       function csv(Q) { return Q <= 0 ? 0 : (a * Q - (Q * Q) / 2) / b - Pb * Q; }
       function psv(Q) { return Q <= 0 ? 0 : Ps * Q - ((Q * Q) / 2 - c * Q) / d; }
       var CS = csv(Qcs), PS = psv(Qps);
       var DWL = 0;
       if (Qt < Qe && Pb >= Ps) {
-        var pdQ = (a - Qt) / b, psQ = (Qt - c) / d;
-        DWL = 0.5 * (pdQ - psQ) * (Qe - Qt);
+        var pdQ = (a - Qt) / b, psQd = (Qt - c) / d;
+        DWL = 0.5 * (pdQ - psQd) * (Qe - Qt);
         if (DWL < 0) DWL = 0;
       }
 
       steps.push({
         label: "Surplus ekonomi pada kuantitas yang terjadi",
         lines: [
-          "CS = ½ × (harga puncak permintaan − Pb) × Q = ∫₀^Q [Pd(q) − Pb] dq = " + nice(CS),
-          "PS = ∫₀^Q [Ps − Ps(q)] dq = " + nice(PS),
-          "Total surplus = " + nice(CS + PS) + (DWL > 0 ? "   →   berkurang " + nice(DWL) + " (deadweight loss)" : "")
-        ]
+          "CS = ∫₀^Q [Pd(q) − Pb] dq = (a×Q − Q²/2)/b − Pb×Q = " + nice(CS),
+          "PS = ∫₀^Q [Ps − Ps(q)] dq = Ps×Q − (Q²/2 − c×Q)/d = " + nice(PS),
+          "Total surplus = CS + PS = " + nice(CS + PS) +
+            (DWL > 0 ? "   —   berkurang " + nice(DWL) + " (deadweight loss)" : "")
+        ],
+        result: "CS = " + nice(CS) + " · PS = " + nice(PS) + (DWL > 0 ? " · DWL = " + nice(DWL) : ""),
+        why: "Surplus konsumen adalah luas di bawah kurva permintaan dan di atas harga bayar Pb; surplus produsen luas di atas kurva penawaran dan di bawah harga terima Ps — keduanya dihitung lewat integral pada kuantitas yang benar-benar terjadi. Karena kuantitas berkurang dari Q*, ada luas segitiga yang tidak sempat menjadi surplus siapa pun: itulah deadweight loss, tanda kebijakan menimbulkan inefficiency."
       });
+
+      /* status: ringkasan bahasa manusia */
+      var status;
+      if (policies.length === 0) {
+        status = "Pasar berada di keseimbangan: tidak ada kekuatan yang menekan harga naik atau turun.";
+      } else if (!hasFiscal && !floorBind && !ceilBind && !kuotaBind) {
+        status = "Kebijakan " + policies.join(" + ") + " sudah diuji tetapi TIDAK mengikat — pasar tetap di keseimbangan murni (" +
+          nice(Pe) + " / " + nice(Qe) + "). Lihat langkah uji di atas.";
+      } else {
+        status = "Kebijakan aktif: " + policies.join(" + ") + ". Pembeli bayar " + nice(Pb) +
+          ", penjual terima " + nice(Ps) + ", kuantitas pasar " + nice(Qt) +
+          " (tanpa kebijakan: " + nice(Pe) + " / " + nice(Qe) + ").";
+        if (excess > 0 && excessType === "supply") {
+          status += " Kelebihan penawaran " + nice(excess) + " unit" +
+            (govCost > 0 ? " diserap pemerintah dengan biaya " + nice(govCost) + "." : " menumpuk / tidak terjual.");
+        }
+        if (excess > 0 && excessType === "demand") {
+          status += " Kelangkaan " + nice(excess) + " unit — permintaan tidak terlayani.";
+        }
+      }
 
       var results = [
         { label: "Harga keseimbangan P*", value: nice(Pe), hero: true },
         { label: "Kuantitas keseimbangan Q*", value: nice(Qe), hero: true },
-        { label: "Harga dibayar pembeli (Pb)", value: nice(Pb), sub: policy === "none" ? "sama dengan P*" : "" },
-        { label: "Harga diterima penjual (Ps)", value: nice(Ps), sub: policy === "none" ? "sama dengan P*" : "" },
+        { label: "Harga dibayar pembeli (Pb)", value: nice(Pb), sub: policies.length ? "" : "sama dengan P*" },
+        { label: "Harga diterima penjual (Ps)", value: nice(Ps), sub: policies.length ? "" : "sama dengan P*" },
         { label: "Kuantitas setelah kebijakan", value: nice(Qt) },
-        { label: "Selisih harga (Pb − Ps)", value: nice(wedge), sub: policy === "pajak" ? "= pajak per unit" : policy === "subsidi" ? "= subsidi per unit" : "" },
+        { label: "Selisih harga (Pb − Ps)", value: nice(wedge), sub: hasFiscal ? "= belah ketupat (pajak − subsidi)" : onKuota ? "= rent kuota" : "" },
         { label: "Surplus konsumen", value: nice(CS) },
         { label: "Surplus produsen", value: nice(PS) },
         { label: "Total surplus", value: nice(CS + PS) },
         { label: "Deadweight loss", value: nice(DWL), sub: DWL > 0 ? "kesejahteraan yang hilang" : "—" }
       ];
-      if (excessType === "supply") results.push({ label: "Kelebihan penawaran", value: nice(excess), sub: "excess supply" });
-      if (excessType === "demand") results.push({ label: "Kelangkaan", value: nice(excess), sub: "excess demand" });
+      if (excess > 0 && excessType === "supply") results.push({ label: "Kelebihan penawaran", value: nice(excess), sub: "excess supply" });
+      if (excess > 0 && excessType === "demand") results.push({ label: "Kelangkaan", value: nice(excess), sub: "excess demand" });
       if (govCost > 0) results.push({ label: "Biaya pembelian pemerintah", value: nice(govCost), sub: "menyerap kelebihan penawaran" });
-      if (rev > 0) results.push({ label: policy === "subsidi" ? "Biaya subsidi" : "Penerimaan pajak", value: nice(rev) });
+      if (rev > 0) results.push({ label: "Penerimaan pemerintah", value: nice(rev), sub: "(Pb − Ps) × Q" });
+      else if (rev < 0) results.push({ label: "Biaya subsidi", value: nice(-rev), sub: "(Pb − Ps) × Q" });
 
-      /* ---------- grafik ---------- */
-      var yTop = Math.max(choke, Pe, Pb, Ps, policy === "floor" ? v.Pmin || 0 : 0, policy === "ceiling" ? v.Pmax || 0 : 0, 1) * 1.12;
-      var xTop = Math.max(a, c + d * yTop, Qe * 1.05, Qt * 1.15, 1) * 1.05;
+      /* ---------- grafik: kurva memakai persamaan & angka yang sama dengan langkah ---------- */
+      var yTop = Math.max(choke, Pe, Pb, Ps, onFloor ? Pmin || 0 : 0, onCeil ? Pmax || 0 : 0, 1) * 1.12;
+      var xTop = Math.max(a, c + d * yTop, Qe * 1.05, Qt * 1.15, Qprod * 1.15, 1) * 1.05;
       var series = [
-        { label: "Permintaan (Qd)", color: "demand", pts: [[0, choke], [a, 0]] },
-        { label: "Penawaran (Qs)", color: "supply", pts: [[c, 0], [c + d * yTop, yTop]] }
+        { label: "Qd = " + nice(a) + " − " + nice(b) + "P", color: "demand", pts: [[0, choke], [a, 0]] },
+        { label: "Qs = " + nice(c) + " + " + nice(d) + "P", color: "supply", pts: [[c, 0], [c + d * yTop, yTop]] }
       ];
+      if (hasFiscal) {
+        var qLabel = "Qs′ = " + nice(c) + " + " + nice(d) + "(P" +
+          (w < -1e-9 ? " + " + nice(-w) : Math.abs(w) > 1e-9 ? " − " + nice(w) : "") + ")" +
+          (Math.abs(m - 1) > 1e-9 ? " / " + nice(m) : "") + " (efektif)";
+        series.push({
+          label: qLabel, color: "supply", dash: true,
+          pts: [
+            [c + d * (Math.max(w, 0) - w) / m, Math.max(w, 0)],
+            [c + d * (yTop - w) / m, yTop]
+          ]
+        });
+      }
       var regions = [];
       if (v.surplus) {
         regions.push({ pts: [[0, choke], [Qcs, Pb], [0, Pb]], color: "demand", opacity: 0.16, label: "CS" });
@@ -368,31 +415,47 @@
         });
       }
       var hlines = [], vlines = [], points = [];
-      if (policy === "pajak" || policy === "pajakprosen" || policy === "subsidi") {
-        hlines.push({ y: Pb, label: "Pb = " + nice(Pb), color: "blue" });
-        hlines.push({ y: Ps, label: "Ps = " + nice(Ps), color: "blue", dash: true });
-        vlines.push({ x: Qt, label: "Q = " + nice(Qt) });
-      } else if (policy === "floor" || policy === "ceiling") {
-        var pf = policy === "floor" ? v.Pmin : v.Pmax;
-        hlines.push({ y: pf, label: (policy === "floor" ? "floor = " : "ceiling = ") + nice(pf), color: "blue" });
-        if (excess > 0) {
-          var Qd3 = a - b * pf, Qs3 = c + d * pf;
-          vlines.push({ x: Qd3, label: "Qd = " + nice(Qd3) });
-          vlines.push({ x: Qs3, label: "Qs = " + nice(Qs3) });
-        }
-      } else if (policy === "kuota" && wedge > 0) {
-        vlines.push({ x: Qt, label: "kuota = " + nice(Qt) });
-        hlines.push({ y: Pb, label: "Pb = " + nice(Pb), color: "blue" });
-        hlines.push({ y: Ps, label: "Ps = " + nice(Ps), color: "blue", dash: true });
+      function addH(y, label, color, dash) {
+        var dup = hlines.some(function (hL) { return Math.abs(hL.y - y) < 1e-9; });
+        if (!dup) hlines.push({ y: y, label: label, color: color, dash: dash });
       }
+      function addV(x, label) {
+        var dup = vlines.some(function (vL) { return Math.abs(vL.x - x) < 1e-9; });
+        if (!dup) vlines.push({ x: x, label: label });
+      }
+      if (Math.abs(Pb - Ps) > 1e-9 && (hasFiscal || onKuota)) {
+        addH(Pb, "Pb = " + nice(Pb), "blue");
+        addH(Ps, "Ps = " + nice(Ps), "blue", true);
+      }
+      if (policies.length && Math.abs(Qt - Qe) > 1e-9) addV(Qt, "Q = " + nice(Qt));
+      if (onFloor) {
+        addH(Pmin, "floor = " + nice(Pmin), "blue");
+        if (floorBind) {
+          addV(a - b * (m * Pmin + w), "Qd = " + nice(a - b * (m * Pmin + w)));
+          addV(c + d * Pmin, "Qs = " + nice(c + d * Pmin));
+        }
+      }
+      if (onCeil) {
+        addH(Pmax, "ceiling = " + nice(Pmax), "blue");
+        if (ceilBind) {
+          addV(a - b * Pmax, "Qd = " + nice(a - b * Pmax));
+          addV(c + d * ((Pmax - w) / m), "Qs = " + nice(c + d * ((Pmax - w) / m)));
+        }
+      }
+      if (onKuota && kuotaBind) addV(Qbar, "kuota = " + nice(Qbar));
       points.push({ x: Qe, y: Pe, color: "ink", label: "E (" + nice(Qe) + "; " + nice(Pe) + ")" });
       if (Math.abs(Qt - Qe) > 1e-9 && isFinite(Qt)) {
         points.push({ x: Qt, y: Pb, color: "blue", label: "Q′ (" + nice(Qt) + "; " + nice(Pb) + ")" });
       }
 
+      var subChart = "Semua kurva dan angka mengikuti persamaan serta langkah di atas — E = keseimbangan murni, Q′ = titik setelah kebijakan" +
+        (hasFiscal ? "; kurva putus-putus Qs′ = penawaran efektif setelah belah ketupat" : "") +
+        (floorBind ? "; floor mengikat: kelebihan penawaran di sisi kanan titik potong" : onFloor ? "; floor di bawah Ps → tidak mengikat" : "") +
+        (ceilBind ? "; ceiling mengikat → kelangkaan" : onCeil ? "; ceiling di atas Pb → tidak mengikat" : "") +
+        (onKuota && kuotaBind ? "; garis tegak kuota = Q̄" : "") + ".";
       var charts = [{
-        title: "Keseimbangan pasar" + (policy === "none" ? "" : " dengan kebijakan"),
-        sub: "titik E = keseimbangan · angka mengikuti input",
+        title: "Keseimbangan pasar" + (policies.length ? " — " + policies.join(" + ") : ""),
+        sub: subChart,
         xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
         xDomain: [0, xTop], yDomain: [0, yTop],
         series: series, regions: regions, hlines: hlines, vlines: vlines, points: points
@@ -464,18 +527,22 @@
         steps.push({
           label: "Fungsi permintaan dan turunannya",
           lines: [
-            "Qd = " + nice(a) + " − " + nice(b) + "P     →     ∂Q/∂P = −" + nice(b),
-            "Pada P = " + nice(P) + " :   Q = " + nice(a) + " − " + nice(b) + "(" + nice(P) + ") = " + nice(Q)
-          ]
+            "Qd = " + nice(a) + " − " + nice(b) + "P",
+            "∂Q/∂P = −" + nice(b),
+            "Pada P = " + nice(P) + " : Q = " + nice(a) + " − " + nice(b) + "(" + nice(P) + ") = " + nice(Q)
+          ],
+          why: "Langkah ini menyiapkan dua bahan untuk rumus elastisitas: fungsi permintaan dan turunannya terhadap harga. Karena bentuknya linear, turunan ∂Q/∂P selalu sama dengan −b, yaitu −" + nice(b) + ", bukan angka hitungan baru. Nilai Q didapat dengan memasukkan harga uji P = " + nice(P) + " ke fungsi permintaan yang kamu isi di kolom a, b, dan P."
         });
         steps.push({
           label: "Rumus elastisitas titik",
           lines: [
             "Ep = (∂Q/∂P) × (P/Q)",
             "Ep = (−" + nice(b) + ") × (" + nice(P) + " / " + nice(Q) + ")",
-            "Ep = " + nice(E) + "      |Ep| = " + nice(Math.abs(E))
+            "Ep = " + nice(E),
+            "|Ep| = " + nice(Math.abs(E))
           ],
-          result: true
+          result: "Ep = " + nice(E) + " · |Ep| = " + nice(Math.abs(E)),
+          why: "Elastisitas titik mengukur berapa persen kuantitas berubah bila harga berubah satu persen pada titik itu. Caranya, kemiringan ∂Q/∂P dikalikan rasio P/Q di titik uji, sehingga hasilnya tidak bergantung pada satuan harga maupun kuantitas. Angka P dan Q di sini persis angka yang dihitung pada langkah sebelumnya."
         });
         steps.push({
           label: "Interpretasi",
@@ -485,7 +552,8 @@
                 : "|Ep| = 1 → permintaan elastis unitary",
             "Jika harga naik 1%, kuantitas permintaan berubah sekitar " + nice(E) + "% (bergerak berlawanan arah).",
             "TR = P × Q pada titik uji = " + nice(P) + " × " + nice(Q) + " = " + nice(P * Q)
-          ]
+          ],
+          why: "Langkah terakhir menerjemahkan angka Ep menjadi sifat permintaan: di atas 1 elastis, di bawah 1 inelastis, tepat 1 unitary. Arah negatif muncul karena harga dan kuantitas bergerak berlawanan. TR dihitung sebagai pembanding agar kamu bisa melihat apakah menaikkan harga menambah atau justru mengurangi penerimaan."
         });
         status = "Permintaan " + klasifikasi(E) + ". " +
           (Math.abs(E) > 1
@@ -503,9 +571,9 @@
         ];
         charts = [{
           title: "Elastisitas di satu titik",
-          sub: "titik uji menyusuri kurva permintaan",
+          sub: "Kurva Qd = " + nice(a) + " − " + nice(b) + "P dengan titik uji pada P = " + nice(P) + "; garis bantu tegak dan datar menunjukkan Q dan P yang menjadi penyebut dan pembilang pada rumus Ep = (∂Q/∂P)(P/Q).",
           xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
-          series: [{ label: "Permintaan Qd = a − bP", color: "demand", pts: [[0, a / b], [a, 0]] }],
+          series: [{ label: "Qd = " + nice(a) + " − " + nice(b) + "P", color: "demand", pts: [[0, a / b], [a, 0]] }],
           points: [{ x: Q, y: P, color: "ink", label: "E = " + nice(E) }],
           vlines: [{ x: Q, color: "muted" }],
           hlines: [{ y: P, color: "muted" }]
@@ -518,19 +586,22 @@
         steps.push({
           label: "Perubahan relatif (midpoint)",
           lines: [
-            "%ΔQ = (Q₂ − Q₁) / [(Q₁ + Q₂)/2] = (" + nice(q2) + " − " + nice(q1) + ") / " +
-              nice((q1 + q2) / 2) + " = " + nice(dQ) + " %",
-            "%ΔP = (P₂ − P₁) / [(P₁ + P₂)/2] = (" + nice(p2) + " − " + nice(p1) + ") / " +
-              nice((p1 + p2) / 2) + " = " + nice(dP) + " %"
-          ]
+            "%ΔQ = (Q₂ − Q₁) / [(Q₁ + Q₂)/2]",
+            "%ΔQ = (" + nice(q2) + " − " + nice(q1) + ") / " + nice((q1 + q2) / 2) + " = " + nice(dQ) + " %",
+            "%ΔP = (P₂ − P₁) / [(P₁ + P₂)/2]",
+            "%ΔP = (" + nice(p2) + " − " + nice(p1) + ") / " + nice((p1 + p2) / 2) + " = " + nice(dP) + " %"
+          ],
+          why: "Elastisitas busur dipakai saat kamu hanya punya dua pengamatan, bukan satu fungsi. Perubahan kuantitas dan harga dibagi rata-rata kedua titik (metode midpoint) supaya hasilnya sama baik dihitung dari titik awal ke titik akhir maupun sebaliknya. Angka Q₁, Q₂, P₁, P₂ berasal dari empat kolom pengamatan yang kamu isi."
         });
         steps.push({
           label: "Rumus busur",
           lines: [
-            "Ep = %ΔQ / %ΔP = " + nice(dQ) + " / " + nice(dP) + " = " + nice(Eb),
+            "Ep = %ΔQ / %ΔP",
+            "Ep = " + nice(dQ) + " / " + nice(dP) + " = " + nice(Eb),
             "|Ep| = " + nice(Math.abs(Eb))
           ],
-          result: true
+          result: "Ep = " + nice(Eb) + " · |Ep| = " + nice(Math.abs(Eb)),
+          why: "Setelah kedua perubahan relatif diketahui, elastisitas busur hanyalah pembagiannya. Hasil ini menggambarkan rata-rata sepanjang rentang antara kedua titik, bukan elastisitas di satu titik tertentu. Tanda negatif menunjukkan hubungan harga dan kuantitas yang berlawanan seperti biasa."
         });
         status = "Antara kedua titik itu permintaan " + klasifikasi(Eb) + ".";
         results = [
@@ -547,9 +618,9 @@
         var qmin = Math.min(q1, q2) * 0.85, qmax = Math.max(q1, q2) * 1.15;
         charts = [{
           title: "Elastisitas busur antara dua titik",
-          sub: "garis penghubung = penaksiran permintaan",
+          sub: "Garis penghubung kedua pengamatan menjadi penaksiran kurva permintaan; elastisitas busur dihitung dari perubahan relatif, sehingga nilainya mewakili seluruh rentang antara titik 1 dan titik 2, bukan kemiringan garisnya.",
           xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
-          series: [{ label: "garis antara kedua titik", color: "demand", fn: linP, xRange: [qmin, qmax] }],
+          series: [{ label: "P = " + (linP(0) < 0 ? "−" + nice(-linP(0)) : nice(linP(0))) + (slope < 0 ? " − " + nice(-slope) : " + " + nice(slope)) + "Q", color: "demand", fn: linP, xRange: [qmin, qmax] }],
           points: [
             { x: q1, y: p1, color: "ink", label: "1 (" + nice(q1) + "; " + nice(p1) + ")" },
             { x: q2, y: p2, color: "blue", label: "2 (" + nice(q2) + "; " + nice(p2) + ")", dy: 14 }
@@ -565,14 +636,17 @@
           lines: [
             "%ΔQx = (" + nice(cq2) + " − " + nice(cq1) + ") / " + nice((cq1 + cq2) / 2) + " = " + nice(dqx) + " %",
             "%ΔPy = (" + nice(cp2) + " − " + nice(cp1) + ") / " + nice((cp1 + cp2) / 2) + " = " + nice(dpy) + " %"
-          ]
+          ],
+          why: "Langkah ini mengubah selisih kuantitas X dan harga Y menjadi persen terhadap nilai rata-ratanya, sama seperti metode midpoint pada elastisitas busur. Tujuannya agar kedua perubahan bisa dibandingkan meski satuannya berbeda. Angka-angka berasal dari kolom Qx dan Py untuk pengamatan awal dan akhir."
         });
         steps.push({
           label: "Rumus elastisitas silang",
           lines: [
-            "Exy = %ΔQx / %ΔPy = " + nice(dqx) + " / " + nice(dpy) + " = " + nice(Exy)
+            "Exy = %ΔQx / %ΔPy",
+            "Exy = " + nice(dqx) + " / " + nice(dpy) + " = " + nice(Exy)
           ],
-          result: true
+          result: "Exy = " + nice(Exy),
+          why: "Elastisitas silang membandingkan perubahan jumlah barang X dengan perubahan harga barang Y. Tandanya yang paling penting: positif berarti kedua barang saling menggantikan, negatif berarti saling melengkapi. Besarnya angka menunjukkan seberapa kuat hubungan itu."
         });
         var jenis = Exy > 0 ? "substitusi (Exy &gt; 0)" : Exy < 0 ? "komplementer (Exy &lt; 0)" : "tidak berhubungan (Exy = 0)";
         status = "X dan Y adalah barang " + jenis + ". " +
@@ -585,11 +659,18 @@
           { label: "%Δ Qx", value: nice(dqx) + " %" },
           { label: "%Δ Py", value: nice(dpy) + " %" }
         ];
+        var slX = (cq2 - cq1) / (cp2 - cp1);
+        var icX = cq1 - slX * cp1;
         charts = [{
           title: "Hubungan Qx terhadap harga Py",
-          sub: "kemiringan positif = substitusi · negatif = komplementer",
+          sub: "Dua pengamatan Qx pada dua tingkat harga Y; garis miring ke atas berarti kedua barang substitusi (Exy positif), miring ke bawah berarti komplementer (Exy negatif).",
           xLabel: "Harga barang Y (Py)", yLabel: "Kuantitas X (Qx)",
-          series: [{ label: "penaksiran hubungan", color: "blue", pts: [[cp1, cq1], [cp2, cq2]] }],
+          series: [{
+            label: isFinite(slX)
+              ? "Qx = " + (icX < 0 ? "−" + nice(-icX) : nice(icX)) + (slX < 0 ? " − " + nice(-slX) : " + " + nice(slX)) + "Py"
+              : "Qx = " + nice(cq1) + " (Py tetap)",
+            color: "blue", pts: [[cp1, cq1], [cp2, cq2]]
+          }],
           points: [
             { x: cp1, y: cq1, color: "ink", label: "1" },
             { x: cp2, y: cq2, color: "blue", label: "2", dy: 14 }
@@ -605,12 +686,17 @@
           lines: [
             "%ΔQ = (" + nice(iq2) + " − " + nice(iq1) + ") / " + nice((iq1 + iq2) / 2) + " = " + nice(dqi) + " %",
             "%ΔI = (" + nice(ii2) + " − " + nice(ii1) + ") / " + nice((ii1 + ii2) / 2) + " = " + nice(di) + " %"
-          ]
+          ],
+          why: "Langkah ini mengubah selisih permintaan dan pendapatan menjadi persen terhadap nilai rata-ratanya. Cara midpoint dipakai agar hasilnya tidak bergantung pada titik mana yang dianggap awal. Angka Q₁, Q₂, I₁, I₂ berasal dari kolom pengamatan yang kamu isi."
         });
         steps.push({
           label: "Rumus elastisitas pendapatan",
-          lines: ["EI = %ΔQ / %ΔI = " + nice(dqi) + " / " + nice(di) + " = " + nice(Ei)],
-          result: true
+          lines: [
+            "EI = %ΔQ / %ΔI",
+            "EI = " + nice(dqi) + " / " + nice(di) + " = " + nice(Ei)
+          ],
+          result: "EI = " + nice(Ei),
+          why: "Elastisitas pendapatan membandingkan perubahan jumlah yang diminta dengan perubahan pendapatan. Tandanya menentukan jenis barang: negatif berarti inferior, positif berarti normal, dan di atas 1 berarti mewah. Angka persen yang dibagi di sini adalah hasil langkah sebelumnya."
         });
         var kategori = Ei < 0 ? "barang inferior (EI &lt; 0)" : Ei < 1 ? "barang normal pokok (0 &lt; EI &lt; 1)" : "barang normal mewah / luxury (EI &gt; 1)";
         status = "Barang tersebut tergolong " + kategori + ".";
@@ -620,11 +706,18 @@
           { label: "%Δ Q", value: nice(dqi) + " %" },
           { label: "%Δ I", value: nice(di) + " %" }
         ];
+        var slI = (iq2 - iq1) / (ii2 - ii1);
+        var icI = iq1 - slI * ii1;
         charts = [{
           title: "Kurva Engel: Q terhadap pendapatan",
-          sub: "kemiringan positif = barang normal",
+          sub: "Kurva Engel menghubungkan pendapatan dengan jumlah yang diminta; garis miring ke atas menandakan barang normal, sedangkan garis menurun menandakan barang inferior. Elastisitas pendapatan dihitung dari perubahan relatif kedua titik pada garis ini.",
           xLabel: "Pendapatan (I)", yLabel: "Kuantitas (Q)",
-          series: [{ label: "kurva Engel", color: "supply", pts: [[ii1, iq1], [ii2, iq2]] }],
+          series: [{
+            label: isFinite(slI)
+              ? "Q = " + (icI < 0 ? "−" + nice(-icI) : nice(icI)) + (slI < 0 ? " − " + fmt(-slI, 8) : " + " + fmt(slI, 8)) + "I"
+              : "Q = " + nice(iq1) + " (I tetap)",
+            color: "supply", pts: [[ii1, iq1], [ii2, iq2]]
+          }],
           points: [
             { x: ii1, y: iq1, color: "ink", label: "1" },
             { x: ii2, y: iq2, color: "supply", label: "2", dy: 14 }
@@ -639,13 +732,18 @@
           label: "Perubahan relatif",
           lines: [
             "%ΔQs = (" + nice(sq2) + " − " + nice(sq1) + ") / " + nice((sq1 + sq2) / 2) + " = " + nice(dqs) + " %",
-            "%ΔP  = (" + nice(sp2) + " − " + nice(sp1) + ") / " + nice((sp1 + sp2) / 2) + " = " + nice(dps) + " %"
-          ]
+            "%ΔP = (" + nice(sp2) + " − " + nice(sp1) + ") / " + nice((sp1 + sp2) / 2) + " = " + nice(dps) + " %"
+          ],
+          why: "Langkah ini menghitung perubahan relatif kuantitas penawaran dan harga dengan metode midpoint. Kedua angka harus dalam persen agar bisa dibandingkan. Nilainya berasal dari kolom Qs dan harga untuk pengamatan awal dan akhir yang kamu isi."
         });
         steps.push({
           label: "Rumus elastisitas penawaran",
-          lines: ["Es = %ΔQs / %ΔP = " + nice(dqs) + " / " + nice(dps) + " = " + nice(Es)],
-          result: true
+          lines: [
+            "Es = %ΔQs / %ΔP",
+            "Es = " + nice(dqs) + " / " + nice(dps) + " = " + nice(Es)
+          ],
+          result: "Es = " + nice(Es),
+          why: "Elastisitas penawaran membandingkan perubahan jumlah yang ditawarkan dengan perubahan harga. Hasilnya positif karena harga dan kuantitas penawaran bergerak searah. Angka yang dibagi adalah persentase dari langkah sebelumnya."
         });
         status = "Penawaran " + (Math.abs(Es) > 1 ? "elastis (Es &gt; 1)" : Math.abs(Es) < 1 ? "inelastis (Es &lt; 1)" : "elastis unitary (Es = 1)") +
           ". Bernotasi positif karena harga dan kuantitas penawaran bergerak searah.";
@@ -655,11 +753,18 @@
           { label: "%Δ Qs", value: nice(dqs) + " %" },
           { label: "%Δ P", value: nice(dps) + " %" }
         ];
+        var slS = (sp2 - sp1) / (sq2 - sq1);
+        var icS = sp1 - slS * sq1;
         charts = [{
           title: "Kurva penawaran antara dua titik",
-          sub: "kemiringan positif = hukum penawaran",
+          sub: "Garis penawaran melalui dua pengamatan harga dan kuantitas; arahnya naik karena hukum penawaran, dan elastisitasnya dihitung dari perubahan relatif kedua titik, bukan dari kemiringan garis.",
           xLabel: "Kuantitas (Qs)", yLabel: "Harga (P)",
-          series: [{ label: "penawaran", color: "supply", pts: [[sq1, sp1], [sq2, sp2]] }],
+          series: [{
+            label: isFinite(slS)
+              ? "P = " + (icS < 0 ? "−" + nice(-icS) : nice(icS)) + (slS < 0 ? " − " + fmt(-slS, 6) : " + " + fmt(slS, 6)) + "Qs"
+              : "P = " + nice(sp1) + " (Qs tetap)",
+            color: "supply", pts: [[sq1, sp1], [sq2, sp2]]
+          }],
           points: [
             { x: sq1, y: sp1, color: "ink", label: "1" },
             { x: sq2, y: sp2, color: "supply", label: "2", dy: 14 }
@@ -715,36 +820,45 @@
           lines: [
             "Qd = Qs → " + nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
             "P* = " + nice(Pe) + " ;  Q* = " + nice(Qe),
-            "Harga puncak permintaan (Pd = 0) = " + nice(a / b) + " ;  harga minimum penawaran (Qs = 0) = " + nice(-c / d)
-          ]
+            "Harga puncak permintaan (Pd = 0) = " + nice(a / b),
+            "Harga minimum penawaran (Qs = 0) = " + nice(-c / d)
+          ],
+          why: "Langkah ini mencari keseimbangan murni sebagai pembanding dengan menyamakan Qd dan Qs. Angka a, b, c, d berasal dari kolom input. Harga puncak permintaan a/b dan harga minimum penawaran −c/d adalah batas atas dan bawah daerah surplus, jadi keduanya perlu diketahui sebelum menghitung luas."
         },
         {
           label: "Kuantitas pada harga yang dipakai",
           lines: [
-            "Pada P = " + nice(P) + " :   Qd = " + nice(Qd) + " ;  Qs = " + nice(Qs),
+            "Pada P = " + nice(P) + " : Qd = " + nice(Qd) + " ;  Qs = " + nice(Qs),
             "Yang benar-benar ditransaksikan = min(Qd, Qs) = " + nice(Qt),
             Qd > Qs ? "Harga di bawah keseimbangan → kelangkaan " + nice(Qd - Qs) + " unit"
               : Qs > Qd ? "Harga di atas keseimbangan → kelebihan penawaran " + nice(Qs - Qd) + " unit"
                 : "Harga tepat di keseimbangan"
-          ]
+          ],
+          why: "Pada harga P yang dipakai, kuantitas diminta dan ditawarkan dihitung terpisah dari fungsi masing-masing. Yang benar-benar ditransaksikan adalah yang lebih kecil, karena tidak ada yang bisa membeli barang yang tidak diproduksi atau menjual barang yang tidak diminta. Selisih Qd dan Qs menunjukkan apakah harga itu menimbulkan kelangkaan atau kelebihan penawaran."
         },
         {
           label: "Hitung surplus dengan integral di bawah kurva",
           lines: [
-            "CS = ∫₀^Q [Pd(q) − P] dq = (aQ − Q²/2)/b − P·Q = " + nice(CS),
-            "PS = ∫₀^Q [P − Ps(q)] dq = P·Q − (Q²/2 − cQ)/d = " + nice(PS),
-            "Total surplus = " + nice(CS + PS)
+            "CS = ∫₀^Q [Pd(q) − P] dq = (aQ − Q²/2)/b − P·Q",
+            "CS = " + nice(CS),
+            "PS = ∫₀^Q [P − Ps(q)] dq = P·Q − (Q²/2 − cQ)/d",
+            "PS = " + nice(PS),
+            "Total surplus = CS + PS = " + nice(CS + PS)
           ],
-          result: true
+          result: "CS = " + nice(CS) + " · PS = " + nice(PS) + " · total = " + nice(CS + PS),
+          why: "Surplus konsumen adalah luas di bawah kurva permintaan dan di atas harga P, dihitung lewat integral pada kuantitas yang terjadi. Surplus produsen adalah luas di atas kurva penawaran dan di bawah harga P. Keduanya memakai Q yang sama supaya total surplus mencerminkan kesejahteraan yang benar-benar tercipta pada harga itu."
         }
       ];
       if (DWL > 0) {
         steps.push({
           label: "Deadweight loss (kesejahteraan yang hilang)",
           lines: [
-            "Harga permintaan pada Q = " + nice(Qt) + " : " + nice(pdQ) + " ;  harga penawaran : " + nice(psQ),
-            "DWL = ½ × (Pd − Ps) × (Q* − Q) = ½ × " + nice(pdQ - psQ) + " × " + nice(Qe - Qt) + " = " + nice(DWL)
-          ]
+            "Harga permintaan pada Q = " + nice(Qt) + " : " + nice(pdQ),
+            "Harga penawaran pada Q = " + nice(Qt) + " : " + nice(psQ),
+            "DWL = ½ × (Pd − Ps) × (Q* − Q)",
+            "DWL = ½ × " + nice(pdQ - psQ) + " × " + nice(Qe - Qt) + " = " + nice(DWL)
+          ],
+          why: "Karena kuantitas menyusut dari Q* ke Q, ada segitiga di antara kurva permintaan dan penawaran yang tidak lagi menjadi surplus siapa pun. Luasnya dihitung setengah kali selisih harga permintaan dan penawaran pada Q, dikali selisih kuantitas. Itulah deadweight loss, ukuran kesejahteraan yang hilang akibat harga tidak berada di keseimbangan."
         });
       }
 
@@ -764,12 +878,12 @@
       var xTop = Math.max(a, c + d * yTop, Qe * 1.05) * 1.05;
       var charts = [{
         title: "Surplus konsumen dan surplus produsen",
-        sub: "luas daerah dihitung dari angka input",
+        sub: "Daerah di bawah kurva permintaan dan di atas harga adalah surplus konsumen; daerah di atas kurva penawaran dan di bawah harga adalah surplus produsen. Segitiga kecil di antara keduanya muncul bila kuantitas menyusut di bawah Q*, dan luasnya adalah deadweight loss.",
         xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
         xDomain: [0, xTop], yDomain: yDom,
         series: [
-          { label: "Permintaan", color: "demand", pts: [[0, a / b], [a, 0]] },
-          { label: "Penawaran", color: "supply", pts: [[c, 0], [c + d * yTop, yTop]] }
+          { label: "Qd = " + nice(a) + " − " + nice(b) + "P", color: "demand", pts: [[0, a / b], [a, 0]] },
+          { label: "Qs = " + nice(c) + " + " + nice(d) + "P", color: "supply", pts: [[c, 0], [c + d * yTop, yTop]] }
         ],
         regions: [
           { pts: [[0, a / b], [Qt, P], [0, P]], color: "demand", opacity: 0.18 },
@@ -830,18 +944,21 @@
         {
           label: "Fungsi guna marjinal dan syarat keseimbangan",
           lines: [
-            "MUx = " + nice(Ax) + " − " + nice(bx) + " Qx        MUy = " + nice(Ay) + " − " + nice(by) + " Qy",
-            "Syarat 1 (kepuasan maksimum):  MUx / Px = MUy / Py",
-            "Syarat 2 (anggaran habis):      " + nice(Px) + " Qx + " + nice(Py) + " Qy = " + nice(M)
-          ]
+            "MUx = " + nice(Ax) + " − " + nice(bx) + " Qx",
+            "MUy = " + nice(Ay) + " − " + nice(by) + " Qy",
+            "Syarat 1 (kepuasan maksimum): MUx / Px = MUy / Py",
+            "Syarat 2 (anggaran habis): " + nice(Px) + " Qx + " + nice(Py) + " Qy = " + nice(M)
+          ],
+          why: "Dua fungsi guna marjinal dan dua syarat keseimbangan konsumen ditulis lebih dulu. Syarat pertama memastikan setiap rupiah memberi tambahan kepuasan yang sama, syarat kedua memastikan seluruh pendapatan terpakai. Angka Ax, bx, Ay, by, Px, Py, dan M semuanya berasal dari kolom input."
         },
         {
           label: "Bentuk persamaan linear",
           lines: [
-            "Dari syarat 1:  " + nice(Py) + "(" + nice(Ax) + " − " + nice(bx) + " Qx) = " + nice(Px) + "(" + nice(Ay) + " − " + nice(by) + " Qy)",
+            "Dari syarat 1: " + nice(Py) + "(" + nice(Ax) + " − " + nice(bx) + " Qx) = " + nice(Px) + "(" + nice(Ay) + " − " + nice(by) + " Qy)",
             nice(Py * Ax) + " − " + nice(Py * bx) + " Qx = " + nice(Px * Ay) + " − " + nice(Px * by) + " Qy",
-            "→  (" + nice(-Py * bx) + ") Qx + (" + nice(Px * by) + ") Qy = " + nice(c2)
-          ]
+            "→ (" + nice(-Py * bx) + ") Qx + (" + nice(Px * by) + ") Qy = " + nice(c2)
+          ],
+          why: "Syarat MUx/Px = MUy/Py diubah menjadi persamaan linear dengan mengalikan silang kedua harga. Bentuk ini perlu supaya dua syarat bisa diselesaikan bersamaan sebagai sistem dua persamaan. Koefisien di ruas kiri adalah hasil kali harga dengan penurunan guna marjinal yang kamu isi."
         },
         {
           label: "Selesaikan (aturan Cramer)",
@@ -850,7 +967,8 @@
             "Qx* = [" + nice(M) + " × " + nice(b2) + " − " + nice(Py) + " × " + nice(c2) + "] : " + nice(det) + " = " + nice(Qx),
             "Qy* = [" + nice(Px) + " × " + nice(c2) + " − (" + nice(a2) + ") × " + nice(M) + "] : " + nice(det) + " = " + nice(Qy)
           ],
-          result: true
+          result: "Qx* = " + nice(Qx) + " · Qy* = " + nice(Qy),
+          why: "Sistem dua persamaan diselesaikan dengan aturan Cramer: determinan utama menjadi pembagi hasil substitusi. Cara ini dipilih karena sistemnya kecil dan linear. Qx* dan Qy* adalah kombinasi yang memenuhi kedua syarat sekaligus, yaitu kepuasan maksimum dengan anggaran habis."
         },
         {
           label: "Uji syarat keseimbangan",
@@ -858,9 +976,11 @@
             "MUx = " + nice(Ax) + " − " + nice(bx) + "(" + nice(Qx) + ") = " + nice(MUx),
             "MUy = " + nice(Ay) + " − " + nice(by) + "(" + nice(Qy) + ") = " + nice(MUy),
             "MUx/Px = " + nice(MUx) + " / " + nice(Px) + " = " + nice(lam),
-            "MUy/Py = " + nice(MUy) + " / " + nice(Py) + " = " + nice(MUy / Py) + "   → sama ✓ (λ = " + nice(lam) + ")",
+            "MUy/Py = " + nice(MUy) + " / " + nice(Py) + " = " + nice(MUy / Py),
+            "→ sama (λ = " + nice(lam) + ")",
             "Pengeluaran = " + nice(Px) + "(" + nice(Qx) + ") + " + nice(Py) + "(" + nice(Qy) + ") = " + nice(spend) + " (pendapatan = " + nice(M) + ")"
-          ]
+          ],
+          why: "Nilai Qx* dan Qy* dimasukkan kembali ke fungsi guna marjinal untuk memastikan kedua rasio MU terhadap harga benar-benar sama. λ adalah guna marjinal per rupiah terakhir, dan pengeluaran dicek agar sama dengan pendapatan. Kalau ada selisih, berarti solusinya sudut atau parameternya tidak konsisten."
         },
         {
           label: "Total kepuasan",
@@ -868,7 +988,8 @@
             "TUx = " + nice(Ax) + "Qx − ½(" + nice(bx) + ")Qx² = " + nice(TUx),
             "TUy = " + nice(Ay) + "Qy − ½(" + nice(by) + ")Qy² = " + nice(TUy),
             "TU total = " + nice(TUx + TUy)
-          ]
+          ],
+          why: "Total kepuasan dihitung dengan menjumlahkan luas di bawah kurva MU tiap barang sampai kuantitas yang dipilih. Rumus Ax·Qx − ½bx·Qx² berasal dari integral MUx terhadap Qx. Angka ini berguna untuk membandingkan kepuasan sebelum dan sesudah perubahan harga atau pendapatan."
         }
       ];
 
@@ -886,7 +1007,7 @@
       var yMax = Math.max(Ax, Ay, lam * 1.2) * 1.1;
       var charts = [{
         title: "Guna marjinal dua barang dan nilai λ",
-        sub: "konsumsi berhenti saat MUx/Px = MUy/Py = λ",
+        sub: "Dua kurva guna marjinal dan tingkat λ: Qx* dan Qy* berada di ketinggian MU = λ × P masing-masing, tanda bahwa rupiah terakhir di kedua barang memberi tambahan kepuasan per rupiah yang sama.",
         xLabel: "Kuantitas barang (Q)", yLabel: "Guna marjinal (MU)",
         xDomain: [0, xMax], yDomain: [0, yMax],
         series: [
@@ -955,7 +1076,8 @@
             "TP = " + nice(a) + "L + " + nice(b) + "L² − " + nice(c) + "L³",
             "MP = ∂TP/∂L = " + nice(a) + " + " + nice(2 * b) + "L − " + nice(3 * c) + "L²",
             "AP = TP/L = " + nice(a) + " + " + nice(b) + "L − " + nice(c) + "L²"
-          ]
+          ],
+          why: "Fungsi produksi kubik dan turunannya disiapkan lebih dulu. MP adalah turunan TP terhadap L, sedangkan AP adalah TP dibagi L. Dari ketiga bentuk ini semua titik penting dihitung, dan angka a, b, c berasal dari kolom input."
         }
       ];
 
@@ -965,8 +1087,10 @@
           lines: [
             "∂AP/∂L = " + nice(b) + " − " + nice(2 * c) + "L = 0",
             "L = " + nice(b) + " : " + nice(2 * c) + " = " + nice(Lap),
-            "AP maks = " + nice(APmax) + "   (cek: MP = " + nice(MP(Lap)) + " juga " + nice(APmax) + " → AP = MP ✓)"
-          ]
+            "AP maks = " + nice(APmax),
+            "Cek: MP = " + nice(MP(Lap)) + ", sama dengan AP → AP = MP"
+          ],
+          why: "AP maksimum terjadi saat turunan AP terhadap L sama dengan nol, sehingga L = b dibagi 2c. Di titik itu MP tepat memotong AP dari atas, yang sekaligus menandai awal tahap rasional. Angka b dan c adalah koefisien yang kamu isi."
         });
       }
       if (isFinite(Ltpmax)) {
@@ -974,11 +1098,12 @@
           label: "TP maksimum → MP = 0",
           lines: [
             nice(3 * c) + "L² − " + nice(2 * b) + "L − " + nice(a) + " = 0",
-            "L = [" + nice(2 * b) + " + √(" + nice(4 * b * b) + " + " + nice(12 * c * a) + ")] : " + nice(6 * c) +
-              " = " + nice(Ltpmax) + " (akar positif)",
+            "L = [" + nice(2 * b) + " + √(" + nice(4 * b * b) + " + " + nice(12 * c * a) + ")] : " + nice(6 * c) + " = " + nice(Ltpmax),
+            "Akar positif dipakai karena L tidak boleh negatif",
             "TP maks = " + nice(TPmax),
-            "MP terbesar pada L = " + nice(Lmpmax) + " (MP = " + nice(MPmax) + ") — awal diminishing return"
-          ]
+            "MP terbesar pada L = " + nice(Lmpmax) + " (MP = " + nice(MPmax) + ") — awal tambahan hasil yang menurun"
+          ],
+          why: "TP maksimum terjadi saat MP = 0, yaitu ketika tambahan tenaga kerja tidak lagi menambah output. Persamaan kuadrat MP diselesaikan dan diambil akar positifnya karena L tidak boleh negatif. Angka a, b, c yang sama dipakai di sini, sedangkan MP terbesar pada L = b/(3c) menandai awal tambahan hasil yang menurun."
         });
       }
       steps.push({
@@ -989,7 +1114,8 @@
           "AP(" + nice(L) + ") = " + nice(ap),
           "Tahap produksi: " + tahap
         ],
-        result: true
+        result: "TP = " + nice(tp) + " · MP = " + nice(mp) + " · AP = " + nice(ap),
+        why: "Langkah ini mengevaluasi ketiga ukuran pada jumlah tenaga kerja yang kamu pilih, lalu membandingkan MP dengan AP untuk menentukan tahap produksi. TP dihitung langsung dari fungsi, MP dan AP dari rumus turunan dan pembagian. Posisi L terhadap titik AP maksimum dan MP = 0 itulah yang menentukan tahap 1, 2, atau 3."
       });
 
       var results = [
@@ -1016,13 +1142,14 @@
       }
       var charts = [{
         title: "Produksi total, marjinal, dan rata-rata",
-        sub: "sumbu kiri: TP · sumbu kanan: MP & AP · pita hijau = tahap rasional",
+        sub: "Kurva TP, MP, dan AP dari fungsi yang sama dengan langkah di atas: MP memotong AP di titik AP maksimum, dan TP mencapai puncak saat MP = 0." +
+          (isFinite(Lap) && isFinite(Ltpmax) ? " Pita hijau menandai tahap rasional antara L = " + nice(Lap) + " dan L = " + nice(Ltpmax) + "." : ""),
         xLabel: "Tenaga kerja (L)", yLabel: "Output (TP)", yLabel2: "MP & AP",
         xDomain: xr, yDomain: [0, yTop1], yDomain2: [Math.min(0, mp), yTop2],
         series: [
-          { label: "TP (sumbu kiri)", color: "ink", fn: TP, xRange: xr },
-          { label: "MP", color: "demand", axis: 2, fn: MP, xRange: xr },
-          { label: "AP", color: "blue", axis: 2, fn: AP, xRange: xr }
+          { label: "TP = " + nice(a) + "L + " + nice(b) + "L² − " + nice(c) + "L³ (sumbu kiri)", color: "ink", fn: TP, xRange: xr },
+          { label: "MP = " + nice(a) + " + " + nice(2 * b) + "L − " + nice(3 * c) + "L² (sumbu kanan)", color: "demand", axis: 2, fn: MP, xRange: xr },
+          { label: "AP = " + nice(a) + " + " + nice(b) + "L − " + nice(c) + "L² (sumbu kanan)", color: "blue", axis: 2, fn: AP, xRange: xr }
         ],
         regions: regions,
         vlines: [
@@ -1083,9 +1210,12 @@
           lines: [
             "VC = " + nice(p) + "Q + (" + nice(q) + ")Q² + " + nice(r) + "Q³",
             "TC = FC + VC = " + nice(FC) + " + " + nice(p) + "Q + (" + nice(q) + ")Q² + " + nice(r) + "Q³",
-            "AC = TC/Q        AVC = VC/Q        AFC = " + nice(FC) + "/Q",
+            "AC = TC/Q",
+            "AVC = VC/Q",
+            "AFC = " + nice(FC) + "/Q",
             "MC = ∂TC/∂Q = " + nice(p) + " + " + nice(2 * q) + "Q + " + nice(3 * r) + "Q²"
-          ]
+          ],
+          why: "Fungsi biaya disusun dari tiga bagian: biaya tetap FC, biaya variabel VC, dan turunannya MC. AC, AVC, dan AFC adalah biaya per unit yang diperoleh dengan membagi tiap komponen dengan Q. Semua koefisien berasal dari kolom FC, p, q, dan r."
         },
         {
           label: "Evaluasi pada Q = " + nice(Q),
@@ -1093,39 +1223,52 @@
             "VC(" + nice(Q) + ") = " + nice(VC(Q)),
             "TC(" + nice(Q) + ") = " + nice(FC) + " + " + nice(VC(Q)) + " = " + nice(t),
             "AC = " + nice(t) + " : " + nice(Q) + " = " + nice(ac),
-            "AVC = " + nice(VC(Q)) + " : " + nice(Q) + " = " + nice(avc) + "      AFC = " + nice(FC) + " : " + nice(Q) + " = " + nice(afc) + "      (AC = AVC + AFC ✓)",
+            "AVC = " + nice(VC(Q)) + " : " + nice(Q) + " = " + nice(avc),
+            "AFC = " + nice(FC) + " : " + nice(Q) + " = " + nice(afc),
+            "Cek: AC = AVC + AFC",
             "MC = " + nice(p) + " + " + nice(2 * q) + "(" + nice(Q) + ") + " + nice(3 * r) + "(" + nice(Q * Q) + ") = " + nice(mc),
             mc < ac ? "MC (" + nice(mc) + ") &lt; AC (" + nice(ac) + ") → biaya rata-rata masih menurun"
               : "MC (" + nice(mc) + ") &gt; AC (" + nice(ac) + ") → biaya rata-rata sedang naik",
             "Laba per unit bila harga jual P: P − AC = P − " + nice(ac)
           ],
-          result: true
+          result: "TC = " + nice(t) + " · AC = " + nice(ac) + " · MC = " + nice(mc),
+          why: "Semua biaya dievaluasi pada kuantitas Q yang kamu isi. AC = TC/Q dan AVC = VC/Q, sedangkan AFC = FC/Q, sehingga AC harus sama dengan AVC + AFC. MC dihitung dari turunan TC dan dibandingkan dengan AC untuk melihat apakah biaya rata-rata sedang turun atau naik."
         }
       ];
       if (isFinite(Qavc)) {
         steps.push({
           label: "Titik minimum AVC (titik tutup usaha)",
           lines: [
-            "∂AVC/∂Q = " + nice(q) + " + " + nice(2 * r) + "Q = 0  →  Q = " + nice(Qavc),
-            "AVC min = " + nice(AVC(Qavc)) + " ;  MC di titik itu = " + nice(MC(Qavc)) + " → MC memotong AVC di minimumnya ✓",
+            "∂AVC/∂Q = " + nice(q) + " + " + nice(2 * r) + "Q = 0",
+            "Q = " + nice(Qavc),
+            "AVC min = " + nice(AVC(Qavc)),
+            "MC di titik itu = " + nice(MC(Qavc)) + " → MC memotong AVC di minimumnya",
             "Perusahaan tutup (shutdown) bila harga pasar &lt; " + nice(AVC(Qavc))
-          ]
+          ],
+          why: "Titik tutup usaha adalah minimum AVC, dicari saat turunan AVC terhadap Q sama dengan nol. Di titik itu MC memotong AVC, jadi harga pasar di bawah nilai ini membuat produksi tidak menutup biaya variabel. Angka q dan r berasal dari koefisien biaya variabel."
         });
       }
       if (isFinite(Qac)) {
         steps.push({
           label: "Titik minimum AC (titik impas)",
           lines: [
-            "MC = AC  →  selesaikan secara numerik: Q = " + nice(Qac),
-            "AC min = " + nice(AC(Qac)) + " ;  MC di titik itu = " + nice(MC(Qac)) + " (selisih ≈ " + nice(Math.abs(MC(Qac) - AC(Qac))) + ") ✓",
+            "MC = AC → diselesaikan secara numerik: Q = " + nice(Qac),
+            "AC min = " + nice(AC(Qac)),
+            "MC di titik itu = " + nice(MC(Qac)) + " (selisih ≈ " + nice(Math.abs(MC(Qac) - AC(Qac))) + ")",
             "Harga impas (break even) = " + nice(AC(Qac)) + " ; di bawah itu perusahaan rugi"
-          ]
+          ],
+          why: "Titik impas adalah minimum AC, yaitu saat MC = AC. Persamaannya diselesaikan secara numerik karena bentuk kubiknya tidak selalu mudah difaktorkan. Harga jual di bawah AC minimum berarti setiap unit yang terjual masih meninggalkan kerugian."
         });
       }
       if (isFinite(Qmc)) {
         steps.push({
           label: "MC minimum",
-          lines: ["∂MC/∂Q = " + nice(2 * q) + " + " + nice(6 * r) + "Q = 0  →  Q = " + nice(Qmc) + " ;  MC min = " + nice(MC(Qmc))]
+          lines: [
+            "∂MC/∂Q = " + nice(2 * q) + " + " + nice(6 * r) + "Q = 0",
+            "Q = " + nice(Qmc),
+            "MC min = " + nice(MC(Qmc))
+          ],
+          why: "MC minimum dicari dari turunan MC terhadap Q. Titik ini bukan keputusan produksi, tetapi berguna untuk membaca di mana tambahan biaya mulai melambat sebelum naik lagi. Angka q dan r yang sama dipakai seperti pada langkah sebelumnya."
         });
       }
 
@@ -1152,14 +1295,14 @@
       yTop *= 1.08;
       var charts = [{
         title: "Kurva biaya rata-rata dan marjinal",
-        sub: "MC memotong AVC dan AC tepat di titik minimumnya",
+        sub: "MC memotong AVC di titik tutup usaha dan memotong AC di titik impas. Garis tegak menandai Q uji serta kedua titik minimum yang dihitung pada langkah sebelumnya, sehingga terlihat apakah biaya rata-rata masih turun atau sudah naik.",
         xLabel: "Kuantitas produksi (Q)", yLabel: "Biaya per unit / marjinal",
         xDomain: [0, Qmax], yDomain: [0, yTop],
         series: [
-          { label: "AC", color: "blue", fn: AC, xRange: [Qstart, Qmax], n: 160 },
-          { label: "AVC", color: "demand", fn: AVC, xRange: [Qstart, Qmax], n: 160 },
-          { label: "AFC", color: "muted", dash: true, fn: AFC, xRange: [Qstart, Qmax], n: 160 },
-          { label: "MC", color: "supply", fn: MC, xRange: [Qstart, Qmax], n: 160 }
+          { label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Qstart, Qmax], n: 160 },
+          { label: "AVC = " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "demand", fn: AVC, xRange: [Qstart, Qmax], n: 160 },
+          { label: "AFC = " + nice(FC) + "/Q", color: "muted", dash: true, fn: AFC, xRange: [Qstart, Qmax], n: 160 },
+          { label: "MC = " + nice(p) + (2 * q === 0 ? "" : (2 * q < 0 ? " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 ? "" : (3 * r < 0 ? " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [Qstart, Qmax], n: 160 }
         ],
         vlines: [
           { x: Q, label: "Q uji = " + nice(Q), color: "ink" },
@@ -1228,7 +1371,8 @@
             "MR = ∂TR/∂Q = " + nice(a) + " − " + nice(2 * b) + "Q",
             "AR = TR/Q = P = " + nice(a) + " − " + nice(b) + "Q",
             "MC = ∂TC/∂Q = " + nice(p) + " + " + nice(2 * q) + "Q + " + nice(3 * r) + "Q²"
-          ]
+          ],
+          why: "Langkah ini menurunkan TR, MR, AR, dan MC dari fungsi permintaan serta fungsi biaya. Pada permintaan menurun, MR selalu lebih curam daripada harga karena setiap tambahan unit menurunkan harga semua unit sebelumnya. Angka a, b, p, q, dan r berasal dari kolom input."
         });
         var A = 3 * r, B = 2 * q + 2 * b, C = p - a;
         var roots = roots2(A, B, C).filter(function (x) { return x > 1e-9 && a - b * x > 0; });
@@ -1242,13 +1386,14 @@
             "Susun menjadi bentuk baku: " + nice(A) + "Q² + " + nice(B) + "Q + (" + nice(C) + ") = 0",
             (Math.abs(A) < 1e-12
               ? "Karena A = 0 → Q* = " + nice(-C / B)
-              : "Q = [−(" + nice(B) + ") ± √(" + nice(B * B - 4 * A * C) + ")] : " + nice(2 * A) +
-                "  → akar positif: " + roots.map(function (x) { return nice(x); }).join(" ; ")),
+              : "Q = [−(" + nice(B) + ") ± √(" + nice(B * B - 4 * A * C) + ")] : " + nice(2 * A)),
+            "Akar positif: " + roots.map(function (x) { return nice(x); }).join(" ; "),
             "Dipilih akar terkecil yang positif (MR menurun memotong MC yang menaik): Q* = " + nice(Q),
             "P* dibaca dari kurva permintaan: P = " + nice(a) + " − " + nice(b) + "(" + nice(Q) + ") = " + nice(P),
-            "Cek: MR = " + nice(a - 2 * b * Q) + " ;  MC = " + nice(MC(Q)) + "  → sama ✓"
+            "Cek: MR = " + nice(a - 2 * b * Q) + " ;  MC = " + nice(MC(Q)) + " → sama"
           ],
-          result: true
+          result: "Q* = " + nice(Q) + " · P* = " + nice(P),
+          why: "Laba maksimum tercapai saat tambahan penerimaan sama dengan tambahan biaya, yaitu MR = MC. Persamaan itu disusun menjadi bentuk kuadrat, lalu diambil akar positif terkecil karena di situlah MR memotong MC yang menaik. Harga jual dibaca dari kurva permintaan pada Q*."
         });
       } else {
         P = Pmark;
@@ -1258,7 +1403,8 @@
             "P = MR = AR = " + nice(P) + " (garis permintaan mendatar untuk perusahaan)",
             "Laba maksimum tetap di MR = MC → " + nice(P) + " = " + nice(p) + " + " + nice(2 * q) + "Q + " + nice(3 * r) + "Q²",
             "MC = ∂TC/∂Q = " + nice(p) + " + " + nice(2 * q) + "Q + " + nice(3 * r) + "Q²"
-          ]
+          ],
+          why: "Pada persaingan sempurna perusahaan menerima harga pasar, sehingga permintaan yang dihadapinya mendatar dan P = MR = AR. Laba tetap dimaksimalkan di MR = MC, yang sekarang berarti harga pasar sama dengan biaya marjinal. Harga P berasal dari kolom harga pasar, sedangkan koefisien biaya dari kolom p, q, dan r."
         });
         var A2 = 3 * r, B2 = 2 * q, C2 = p - P;
         var roots2b = roots2(A2, B2, C2).filter(function (x) { return x > 1e-9; });
@@ -1270,9 +1416,10 @@
             nice(A2) + "Q² + " + nice(B2) + "Q + (" + nice(C2) + ") = 0",
             "Akar positif: " + roots2b.map(function (x) { return nice(x); }).join(" ; "),
             "Dipilih Q* = " + nice(Q) + " (sisi MC menaik)",
-            "Cek: MC(" + nice(Q) + ") = " + nice(MC(Q)) + " = harga pasar " + nice(P) + " ✓"
+            "Cek: MC(" + nice(Q) + ") = " + nice(MC(Q)) + " = harga pasar " + nice(P)
           ],
-          result: true
+          result: "Q* = " + nice(Q) + " · P* = " + nice(P),
+          why: "Persamaan MC = P diselesaikan untuk Q, dan dipilih akar pada sisi MC yang menaik agar laba benar-benar maksimum. Setelah Q* diketahui, harga sudah tetap sebesar harga pasar. Baris cek memastikan MC di Q* memang sama dengan harga."
         });
       }
 
@@ -1289,7 +1436,8 @@
           "Laba = TR − TC = " + nice(profit),
           "Cara kedua: laba = (P − AC) × Q = (" + nice(P) + " − " + nice(ac) + ") × " + nice(Q) + " = " + nice((P - ac) * Q)
         ],
-        result: true
+        result: "Laba = " + nice(profit),
+        why: "TR dihitung dari harga kali kuantitas, TC dari fungsi biaya pada kuantitas yang sama, lalu laba adalah selisihnya. Cara kedua (P − AC) × Q memberi hasil yang sama dan menunjukkan laba per unit. Angka-angka ini memakai Q* dan P* dari langkah sebelumnya."
       });
 
       var status;
@@ -1327,13 +1475,13 @@
       if (!(yTop > 0)) yTop = 1;
       var series = [], regions = [], hlines = [], vlines = [], points = [];
       if (seg === "monopoli") {
-        series.push({ label: "Permintaan (D)", color: "demand", pts: [[0, a], [a / b, 0]] });
-        series.push({ label: "MR = a − 2bQ", color: "demand", dash: true, pts: [[0, a], [a / (2 * b), 0]] });
+        series.push({ label: "P = " + nice(a) + " − " + nice(b) + "Q (permintaan)", color: "demand", pts: [[0, a], [a / b, 0]] });
+        series.push({ label: "MR = " + nice(a) + " − " + nice(2 * b) + "Q", color: "demand", dash: true, pts: [[0, a], [a / (2 * b), 0]] });
       } else {
-        series.push({ label: "D = MR = AR = P", color: "demand", pts: [[0, P], [Qmax, P]] });
+        series.push({ label: "P = MR = AR = " + nice(P), color: "demand", pts: [[0, P], [Qmax, P]] });
       }
-      series.push({ label: "MC", color: "supply", fn: MC, xRange: [0, Qmax], n: 120 });
-      if (FC > 0) series.push({ label: "AC", color: "blue", fn: AC, xRange: [Math.max(Qmax / 40, 0.1), Qmax], n: 120 });
+      series.push({ label: "MC = " + nice(p) + (2 * q === 0 ? "" : (2 * q < 0 ? " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 ? "" : (3 * r < 0 ? " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [0, Qmax], n: 120 });
+      if (FC > 0) series.push({ label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Math.max(Qmax / 40, 0.1), Qmax], n: 120 });
       vlines.push({ x: Q, label: "Q* = " + nice(Q), color: "ink" });
       hlines.push({ y: P, label: "P* = " + nice(P), color: "blue" });
       if (profit !== 0 && isFinite(ac)) {
@@ -1347,7 +1495,7 @@
 
       var charts = [{
         title: seg === "monopoli" ? "Keseimbangan monopoli (MR = MC)" : "Keseimbangan persaingan sempurna (P = MC)",
-        sub: "daerah terwarnai = laba (hijau) atau rugi (merah) per unit dikali kuantitas",
+        sub: "Daerah terwarnai adalah selisih harga dan biaya rata-rata dikali kuantitas: hijau berarti laba, merah berarti rugi. Titik E* menunjukkan kuantitas dan harga tempat MR = MC, dan garis P* memperlihatkan harga yang dibaca dari kurva permintaan.",
         xLabel: "Kuantitas (Q)", yLabel: "Harga & biaya per unit",
         xDomain: [0, Qmax], yDomain: [0, yTop],
         series: series, regions: regions, hlines: hlines, vlines: vlines, points: points
@@ -1414,34 +1562,43 @@
         {
           label: "Invers permintaan dan MR tiap pasar",
           lines: [
-            "Pasar 1: Q1 = " + nice(a1) + " − " + nice(b1) + "P1  →  P1 = (" + nice(a1) + " − Q1)/" + nice(b1) + " = " + nice(a1 / b1) + " − " + nice(1 / b1) + "Q1",
-            "         MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1         (kemiringan dua kali P1)",
-            "Pasar 2: Q2 = " + nice(a2) + " − " + nice(b2) + "P2  →  P2 = " + nice(a2 / b2) + " − " + nice(1 / b2) + "Q2",
-            "         MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2",
+            "Pasar 1: Q1 = " + nice(a1) + " − " + nice(b1) + "P1",
+            "→ P1 = (" + nice(a1) + " − Q1)/" + nice(b1) + " = " + nice(a1 / b1) + " − " + nice(1 / b1) + "Q1",
+            "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1 (kemiringan dua kali P1)",
+            "Pasar 2: Q2 = " + nice(a2) + " − " + nice(b2) + "P2",
+            "→ P2 = (" + nice(a2) + " − Q2)/" + nice(b2) + " = " + nice(a2 / b2) + " − " + nice(1 / b2) + "Q2",
+            "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2",
             "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "Q" : " (konstan)")
-          ]
+          ],
+          why: "Permintaan tiap pasar dibalik menjadi harga sebagai fungsi kuantitas, lalu diturunkan menjadi MR. Pada permintaan linear, MR punya intersep sama tetapi kemiringannya dua kali lebih curam. Angka a1, b1, a2, b2 berasal dari kolom input, sedangkan MC dari c0 dan c1."
         },
         {
           label: "Penjumlahan horizontal MR (MRt = MR1 + MR2)",
           lines: [
-            "Pada nilai MR bersama = m, tiap pasar memilih kuantitas:",
-            "  Q1 = (" + nice(a1) + " − " + nice(b1) + "m)/2        Q2 = (" + nice(a2) + " − " + nice(b2) + "m)/2",
-            "Kuantitas total: QTotal = (" + nice(a1 + a2) + " − " + nice(b1 + b2) + "m)/2",
-            "Dibalik: m = (" + nice(a1 + a2) + " − 2·QTotal)/" + nice(b1 + b2) + "  →  inilah kurva MRt",
+            "Pada MR bersama = m, tiap pasar memilih kuantitas:",
+            "Q1 = (" + nice(a1) + " − " + nice(b1) + "m)/2",
+            "Q2 = (" + nice(a2) + " − " + nice(b2) + "m)/2",
+            "QTotal = (" + nice(a1 + a2) + " − " + nice(b1 + b2) + "m)/2",
+            "Dibalik: m = (" + nice(a1 + a2) + " − 2·QTotal)/" + nice(b1 + b2) + " → kurva MRt",
             c1 > 0
-              ? "Syarat keseimbangan m = MC: m = [" + nice(c0) + " + " + nice(c1) + "(" + nice((a1 + a2) / 2) + ")] : [1 + " + nice(c1) + "(" + nice((b1 + b2) / 2) + ")] = " + nice(m)
+              ? "Syarat m = MC: m = [" + nice(c0) + " + " + nice(c1) + "(" + nice((a1 + a2) / 2) + ")] : [1 + " + nice(c1) + "(" + nice((b1 + b2) / 2) + ")] = " + nice(m)
               : "MC konstan → MR bersama = m = " + nice(m) + " (MR1 = MR2 = MC)"
           ],
-          result: true
+          result: "MR bersama = " + nice(m),
+          why: "Karena satu pabrik melayani dua pasar, MR tiap pasar dijumlahkan secara horizontal pada setiap tingkat MR yang sama. Hasilnya kurva MRt, dan keseimbangan tercapai saat MRt = MC. Angka m adalah tingkat MR bersama yang memenuhi syarat itu; bila MC konstan, m langsung sama dengan MC."
         },
         {
           label: "Kuantitas dan harga di tiap pasar",
           lines: [
-            "Q1 = (" + nice(a1) + " − " + nice(b1) + " × " + nice(m) + ")/2 = " + nice(Q1) + "   →   P1 = (a1 − Q1)/b1 = " + nice(P1),
-            "Q2 = (" + nice(a2) + " − " + nice(b2) + " × " + nice(m) + ")/2 = " + nice(Q2) + "   →   P2 = (a2 − Q2)/b2 = " + nice(P2),
+            "Q1 = (" + nice(a1) + " − " + nice(b1) + " × " + nice(m) + ")/2 = " + nice(Q1),
+            "P1 = (a1 − Q1)/b1 = " + nice(P1),
+            "Q2 = (" + nice(a2) + " − " + nice(b2) + " × " + nice(m) + ")/2 = " + nice(Q2),
+            "P2 = (a2 − Q2)/b2 = " + nice(P2),
             "QTotal = " + nice(Qt),
-            "Cek: MR1 = " + nice(a1 / b1 - (2 / b1) * Q1) + " ;  MR2 = " + nice(a2 / b2 - (2 / b2) * Q2) + " ;  MC = " + nice(c0 + c1 * Qt) + "  → ketiganya sama ✓"
-          ]
+            "Cek: MR1 = " + nice(a1 / b1 - (2 / b1) * Q1) + " ;  MR2 = " + nice(a2 / b2 - (2 / b2) * Q2) + " ;  MC = " + nice(c0 + c1 * Qt) + " → ketiganya sama"
+          ],
+          result: "Q1 = " + nice(Q1) + " · P1 = " + nice(P1) + " · Q2 = " + nice(Q2) + " · P2 = " + nice(P2),
+          why: "Setelah m diketahui, kuantitas tiap pasar dihitung dari MR masing-masing, lalu harganya dibaca dari kurva permintaan pasar itu. Pasar dengan permintaan lebih elastis akan mendapat harga lebih rendah. Baris cek memastikan MR1, MR2, dan MC di output total benar-benar sama."
         },
         {
           label: "Elastisitas tiap pasar dan laba",
@@ -1452,7 +1609,8 @@
             "TC = " + nice(FC) + " + " + nice(c0) + "(" + nice(Qt) + ")" + (c1 > 0 ? " + ½(" + nice(c1) + ")(" + nice(Qt * Qt) + ")" : "") + " = " + nice(TC),
             "Laba = TR − TC = " + nice(profit)
           ],
-          result: true
+          result: "Laba = " + nice(profit) + " · E1 = " + nice(E1) + " · E2 = " + nice(E2),
+          why: "Elastisitas tiap pasar dihitung untuk menjelaskan mengapa harganya berbeda, lalu TR, TC, dan laba dijumlahkan dari kedua pasar. TC memakai biaya variabel dari total output, bukan per pasar, karena produksinya satu. Angka E yang lebih besar menunjukkan pasar yang lebih peka terhadap harga."
         }
       ];
 
@@ -1480,12 +1638,12 @@
       var charts = [
         {
           title: "Pasar 1",
-          sub: "MR1 = MC bersama → Q1, lalu harga dibaca dari D1",
+          sub: "Permintaan pasar 1 (D1) dan penerimaan marjinalnya (MR1); Q1 dibaca di perpotongan MR1 dengan garis MR bersama = MC, lalu P1 dibaca dari D1 pada Q1.",
           xLabel: "Kuantitas pasar 1", yLabel: "Harga P1",
           xDomain: [0, qm1], yDomain: [0, yD1],
           series: [
-            { label: "D1", color: "demand", pts: [[0, a1 / b1], [a1, 0]] },
-            { label: "MR1", color: "demand", dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] }
+            { label: "P1 = " + nice(a1 / b1) + " − " + nice(1 / b1) + "Q1", color: "demand", pts: [[0, a1 / b1], [a1, 0]] },
+            { label: "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1", color: "demand", dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] }
           ],
           hlines: [{ y: m, label: "MR bersama = " + nice(m), color: "blue" }],
           vlines: [{ x: Q1, label: "Q1 = " + nice(Q1) }],
@@ -1493,12 +1651,12 @@
         },
         {
           title: "Pasar 2",
-          sub: "MR2 = MC bersama → Q2, lalu harga dibaca dari D2",
+          sub: "Permintaan pasar 2 (D2) dan penerimaan marjinalnya (MR2); Q2 dibaca di perpotongan MR2 dengan garis MR bersama = MC, lalu P2 dibaca dari D2 pada Q2.",
           xLabel: "Kuantitas pasar 2", yLabel: "Harga P2",
           xDomain: [0, qm2], yDomain: [0, yD2],
           series: [
-            { label: "D2", color: "supply", pts: [[0, a2 / b2], [a2, 0]] },
-            { label: "MR2", color: "supply", dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] }
+            { label: "P2 = " + nice(a2 / b2) + " − " + nice(1 / b2) + "Q2", color: "supply", pts: [[0, a2 / b2], [a2, 0]] },
+            { label: "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2", color: "supply", dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] }
           ],
           hlines: [{ y: m, label: "MR bersama = " + nice(m), color: "blue" }],
           vlines: [{ x: Q2, label: "Q2 = " + nice(Q2) }],
@@ -1506,14 +1664,14 @@
         },
         {
           title: "Gabungan: MRt = MR1 + MR2 dijumlahkan horizontal",
-          sub: "perpotongan MRt dengan MC menentukan output total",
+          sub: "MRt adalah penjumlahan horizontal MR1 dan MR2; perpotongannya dengan MC menentukan output total, lalu output itu dibagi kembali ke tiap pasar menurut MR masing-masing.",
           xLabel: "Kuantitas total (QTotal)", yLabel: "MR & MC per unit",
           xDomain: [0, qmT], yDomain: [0, yT],
           series: [
-            { label: "MR1 (pasar 1)", color: "demand", width: 1.4, dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] },
-            { label: "MR2 (pasar 2)", color: "supply", width: 1.4, dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] },
-            { label: "MRt", color: "ink", fn: mrtInv, xRange: [0, (a1 + a2) / 2], n: 60 },
-            { label: "MC", color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 }
+            { label: "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1", color: "demand", width: 1.4, dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] },
+            { label: "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2", color: "supply", width: 1.4, dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] },
+            { label: "MRt = " + nice((a1 + a2) / (b1 + b2)) + " − " + nice(2 / (b1 + b2)) + "QTotal", color: "ink", fn: mrtInv, xRange: [0, (a1 + a2) / 2], n: 60 },
+            { label: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "QTotal" : ""), color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 }
           ],
           points: [{ x: Qt, y: m, color: "ink", label: "QTotal = " + nice(Qt) + " ; MR = MC = " + nice(m) }],
           vlines: [{ x: Qt, color: "ink" }]
@@ -1561,12 +1719,21 @@
     (steps || []).forEach(function (st) {
       var li = document.createElement("li");
       var html = "";
-      if (st.label) html += '<span class="st-label">' + st.label + "</span>";
-      if (st.lines && st.lines.length) {
-        html += st.lines.map(function (ln) {
-          return '<span class="st-line' + (st.result ? " result-line" : "") + '">' + ln + "</span>";
-        }).join("");
+      /* kepala baris: nama langkah di kiri, hasil ringkas di kanan */
+      var tag = typeof st.result === "string" && st.result ? st.result : "";
+      if (st.label || tag) {
+        html += '<div class="st-head">' +
+          '<span class="st-label">' + (st.label || "") + "</span>" +
+          (tag ? '<span class="st-tag">' + tag + "</span>" : "") +
+          "</div>";
       }
+      /* baris rumus: mengalir berdampingan, baru turun baris kalau muat */
+      if (st.lines && st.lines.length) {
+        html += '<div class="st-lines">' + st.lines.map(function (ln) {
+          return '<span class="st-line">' + ln + "</span>";
+        }).join("") + "</div>";
+      }
+      if (st.why) html += '<p class="st-why">' + st.why + "</p>";
       li.innerHTML = html;
       el.appendChild(li);
     });
@@ -1655,8 +1822,16 @@
     form.appendChild(legend);
 
     m.fields.forEach(function (f) {
+      /* judul kelompok input, mis. "Kebijakan pemerintah" */
+      if (f.heading) {
+        var gh = document.createElement("p");
+        gh.className = "form-group";
+        gh.textContent = f.heading;
+        form.appendChild(gh);
+        return;
+      }
       var wrap = document.createElement("div");
-      wrap.className = "field";
+      wrap.className = "field" + (f.dep ? " dep" : "");
       wrap.id = "w-" + id + "-" + f.id;
 
       if (f.type === "check") {
@@ -1818,6 +1993,15 @@
   function applyValues(mode, json) {
     var vals;
     try { vals = JSON.parse(json || "{}"); } catch (e) { return; }
+    /* kompatibilitas tautan lama: "policy":"floor" dst → centang checkbox kebijakan */
+    if (mode === "keseimbangan" && vals.policy) {
+      var pmap = {
+        pajak: "pol_pajak", pajakprosen: "pol_persen", subsidi: "pol_subsidi",
+        floor: "pol_floor", ceiling: "pol_ceiling", kuota: "pol_kuota"
+      };
+      if (pmap[vals.policy]) vals[pmap[vals.policy]] = true;
+      delete vals.policy;
+    }
     Object.keys(vals).forEach(function (k) {
       var el = $("f-" + mode + "-" + k);
       if (!el) return;
