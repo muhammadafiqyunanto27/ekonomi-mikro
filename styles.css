@@ -781,12 +781,13 @@ table.t tbody tr:hover { background: var(--tint); }
   font-weight: 700;
   white-space: nowrap;
 }
-/* baris rumus mengalir berdampingan — baru turun baris kalau penuh */
-.steps .st-lines {
+/* baris rumus: dua lajur — kiri penurunan, kanan pengganti angka / penjelasan singkat */
+.steps .st-lines { margin: var(--space-3xs) 0; }
+.steps .st-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-s);
-  margin: var(--space-3xs) 0;
+  align-items: baseline;
+  gap: var(--space-2xs) var(--space-s);
+  flex-wrap: nowrap;
 }
 .steps .st-line {
   font-family: var(--font-mono);
@@ -795,9 +796,18 @@ table.t tbody tr:hover { background: var(--tint); }
   white-space: pre-wrap;
   overflow-wrap: break-word;
   line-height: 1.65;
-  /* boleh menyusut & membungkus di dalam kolom: penyebab utama scroll samping hilang */
   max-width: 100%;
   min-width: 0;
+}
+.steps .st-note {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  line-height: 1.5;
+  flex: 0 0 auto;
+  white-space: normal;
+  max-width: 38%;
+  text-align: right;
+  padding-left: var(--space-2xs);
 }
 /* penjelasan: diapain, kenapa, dari mana angkanya */
 .steps .st-why {

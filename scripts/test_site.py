@@ -80,7 +80,7 @@ def main():
             check(n_why == n_steps, "mode %s: tiap langkah punya penjelasan (%d/%d)" % (key, n_why, n_steps))
             check(page.locator("#calc-steps .st-tag").count() >= 1, "mode %s: tag hasil ringkas tampil" % key)
             bad_overflow = page.evaluate("""() => {
-              const els = document.querySelectorAll('#calc-steps .st-lines');
+              const els = document.querySelectorAll('#calc-steps .st-row, #calc-steps .st-line, #calc-steps .st-lines');
               let bad = 0;
               els.forEach(function (e) { if (e.scrollWidth > e.clientWidth + 1) bad++; });
               return bad;
@@ -97,7 +97,7 @@ def main():
         n_tag = page.locator("#calc-steps .st-tag").count()
         check(n_tag >= 1, "keseimbangan: tag hasil ringkas tampil (%d)" % n_tag)
         bad_overflow = page.evaluate("""() => {
-          const els = document.querySelectorAll('#calc-steps .st-lines');
+          const els = document.querySelectorAll('#calc-steps .st-row, #calc-steps .st-line, #calc-steps .st-lines');
           let bad = 0;
           els.forEach(function (e) { if (e.scrollWidth > e.clientWidth + 1) bad++; });
           return bad;
