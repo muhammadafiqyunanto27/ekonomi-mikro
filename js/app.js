@@ -38,8 +38,8 @@
   }
   /* akar f(x)=0 pada (lo, hi] dengan perluasan rentang */
   function findRoot(f, lo, hi) {
-    lo = lo === undefined : 1e-6 : lo;
-    hi = hi === undefined : 1 : hi;
+    lo = (lo === undefined ? 1e-6 : lo);
+    hi = (hi === undefined ? 1 : hi);
     var a = lo, fa = f(a), b = hi, fb = f(b), i;
     for (i = 0; i < 60 && isFinite(fa) && isFinite(fb) && fa * fb > 0; i++) {
       b *= 1.9;
@@ -92,7 +92,7 @@
       /* kebijakan yang dicentang — boleh lebih dari satu sekaligus */
       var onPajak = !!v.pol_pajak, onPersen = !!v.pol_persen, onSub = !!v.pol_subsidi;
       var onFloor = !!v.pol_floor, onCeil = !!v.pol_ceiling, onKuota = !!v.pol_kuota;
-      var t = onPajak : v.t : 0, kpersen = onPersen : v.k : 0, s = onSub : v.s : 0;
+      var t = (onPajak ? v.t : 0), kpersen = (onPersen ? v.k : 0), s = (onSub ? v.s : 0);
       if (onPajak && !(t > 0)) throw "Pajak per unit (t) harus lebih besar dari 0.";
       if (onPersen && !(kpersen > 0)) throw "Pajak persen (k) harus lebih besar dari 0.";
       if (onSub && !(s > 0)) throw "Subsidi per unit (s) harus lebih besar dari 0.";
@@ -138,7 +138,7 @@
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
           nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P",
           nice(a - c) + " = " + nice(den) + "P",
-          "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe)",
+          "P* = " + nice(a - c) + " / " + nice(den) + " = " + nice(Pe)",
           "Q* = " + nice(a) + " − " + nice(b) + " × " + nice(Pe) + " = " + nice(Qe)
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
@@ -153,7 +153,7 @@
           label: "Geser penawaran lewat belah ketupat harga: Pb = m·Ps + w",
           lines: [
             { left: "Pb = m·Ps + w", note: "hubungan harga pembeli dan penjual saat ada pajak/subsidi" },
-            { left: "w = t − s = " + nice(t) + (onSub : " − " + nice(s) : " − 0") + " = " + nice(w), note: "belah ketupat per unit (kolom t dan s)" },
+            { left: "w = t − s = " + nice(t) + ((onSub ? " − " + nice(s) : " − 0")) + " = " + nice(w), note: "belah ketupat per unit (kolom t dan s)" },
             { left: "m = 1 + k/100 = " + nice(m), note: "pengali pajak persen (kolom k), kalau tidak dipakai m = 1" },
             { left: nice(a) + " − " + nice(b) + "(" + nice(m) + "Ps + (" + nice(w) + ")) = " + nice(c) + " + " + nice(d) + "Ps", note: "substitusi Pb ke Qd, lalu samakan dengan Qs" },
             { left: nice(a - c - b * w) + " = " + nice(d + b * m) + "Ps", note: "konstanta ke kiri, Ps dikumpulkan di kanan" },
@@ -171,7 +171,7 @@
           label: "Sebaran beban dan penerimaan pemerintah",
           lines: [
             { left: "Pajak per unit efektif = Pb − Ps = " + nice(Pb) + " − " + nice(Ps) + " = " + nice(wedge), note: "selisih harga pembeli dan penjual" },
-            { left: (rev >= 0 : "Penerimaan pemerintah = " : "Biaya pemerintah (subsidi) = ") +
+            { left: (rev >= 0 ? "Penerimaan pemerintah = " : "Biaya pemerintah (subsidi) = ") +
                 nice(wedge) + " × " + nice(Qt) + " = " + nice(Math.abs(rev)), note: "selisih harga dikali kuantitas pasar" },
             { left: "Pembeli menanggung/menerima per unit = Pb − P* = " + nice(Pb) + " − " + nice(Pe) + " = " + nice(Pb - Pe), note: "dibanding harga keseimbangan murni" },
             { left: "Penjual menanggung/menerima per unit = P* − Ps = " + nice(Pe) + " − " + nice(Ps) + " = " + nice(Pe - Ps), note: "dibanding harga keseimbangan murni" }
@@ -195,9 +195,9 @@
         } else {
           var pbFl = m * Pmin + w;
           var qdF = a - b * pbFl, qsF = c + d * Pmin;
-          excess = qsF - qdF; excessType = excess >= 0 : "supply" : "demand";
-          Qt = v.govBuy : qsF : Math.min(qdF, qsF);
-          Qprod = v.govBuy : qsF : Qt;
+          excess = qsF - qdF; excessType = (excess >= 0 ? "supply" : "demand");
+          Qt = (v.govBuy ? qsF : Math.min(qdF, qsF));
+          Qprod = (v.govBuy ? qsF : Qt);
           govCost = v.govBuy && excess > 0 : Pmin * excess : 0;
           Pb = pbFl; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
           steps.push({
