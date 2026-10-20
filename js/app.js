@@ -208,9 +208,7 @@
               { left: "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdF), note: "permintaan pada harga yang dibayar pembeli" },
               { left: "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsF), note: "penawaran pada jaminan Pmin" },
               (excess >= 0 ? { left: "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit", note: "di atas harga itu penjual ingin menjual lebih banyak daripada yang laku" } : { left: "Kelangkaan = Qd − Qs = " + nice(-excess) + " unit", note: "permintaan melampaui penawaran" }),
-              v.govBuy
-                : { left: "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost), note: "hanya jika pemerintah menyerap kelebihan (centang)" }
-                : { left: "Yang terjual = min(Qd, Qs) = " + nice(Qt), note: "sisa produksi menumpuk — tidak ada yang membeli" }
+              (v.govBuy ? { left: "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost), note: "hanya jika pemerintah menyerap kelebihan (centang)" } : { left: "Yang terjual = min(Qd, Qs) = " + nice(Qt), note: "sisa produksi menumpuk — tidak ada yang membeli" }
             ],
             result: "Pb = " + nice(pbFl) + " · Ps = " + nice(Pmin) + " · Q = " + nice(Qt),
             why: "Floor melindungi harga yang diterima produsen, jadi Ps dikunci di Pmin; pembeli tetap membayar Pb = m×Ps + w. Pada harga itu penjual ingin menjual lebih banyak daripada yang laku — itulah kelebihan penawaran. Pemerintah boleh menyerapnya (biaya = Pmin × kelebihan, silakan centang di kolom kiri) atau membiarkannya menumpuk sebagai rugi produsen."
