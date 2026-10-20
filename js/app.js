@@ -25,7 +25,7 @@
     }
     return true;
   }
-  /* akar real persamaan Ax² + Bx + C = 0 */
+  /* akar real persamaan Ax^2 + Bx + C = 0 */
   function roots2(A, B, C) {
     if (Math.abs(A) < 1e-12) {
       if (Math.abs(B) < 1e-12) return [];
@@ -138,7 +138,7 @@
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
           nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P",
           nice(a - c) + " = " + nice(den) + "P",
-          "P* = " + nice(a - c) + " / " + nice(den) + " = " + nice(Pe)",
+          "P* = " + nice(a - c) + " / " + nice(den) + " = " + nice(Pe),
           "Q* = " + nice(a) + " − " + nice(b) + " × " + nice(Pe) + " = " + nice(Qe)
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
@@ -198,7 +198,7 @@
           excess = qsF - qdF; excessType = (excess >= 0 ? "supply" : "demand");
           Qt = (v.govBuy ? qsF : Math.min(qdF, qsF));
           Qprod = (v.govBuy ? qsF : Qt);
-          govCost = v.govBuy && excess > 0 : Pmin * excess : 0;
+          govCost = (v.govBuy && excess > 0 ? Pmin * excess : 0);
           Pb = pbFl; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
           steps.push({
             label: "Floor mengikat: kunci harga penjual di Pmin",
