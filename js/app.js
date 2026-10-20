@@ -15,9 +15,9 @@
     });
   }
   function parseVal(v) {
-    if (typeof v === "number") return isFinite(v) ? v : NaN;
-    var n = parseFloat(String(v === undefined || v === null ? "" : v).replace(/\s/g, "").replace(",", "."));
-    return isFinite(n) ? n : NaN;
+    if (typeof v === "number") return isFinite(v) : v : NaN;
+    var n = parseFloat(String(v === undefined || v === null : "" : v).replace(/\s/g, "").replace(",", "."));
+    return isFinite(n) : n : NaN;
   }
   function ok() {
     for (var i = 0; i < arguments.length; i++) {
@@ -38,8 +38,8 @@
   }
   /* akar f(x)=0 pada (lo, hi] dengan perluasan rentang */
   function findRoot(f, lo, hi) {
-    lo = lo === undefined ? 1e-6 : lo;
-    hi = hi === undefined ? 1 : hi;
+    lo = lo === undefined : 1e-6 : lo;
+    hi = hi === undefined : 1 : hi;
     var a = lo, fa = f(a), b = hi, fb = f(b), i;
     for (i = 0; i < 60 && isFinite(fa) && isFinite(fb) && fa * fb > 0; i++) {
       b *= 1.9;
@@ -92,7 +92,7 @@
       /* kebijakan yang dicentang — boleh lebih dari satu sekaligus */
       var onPajak = !!v.pol_pajak, onPersen = !!v.pol_persen, onSub = !!v.pol_subsidi;
       var onFloor = !!v.pol_floor, onCeil = !!v.pol_ceiling, onKuota = !!v.pol_kuota;
-      var t = onPajak ? v.t : 0, kpersen = onPersen ? v.k : 0, s = onSub ? v.s : 0;
+      var t = onPajak : v.t : 0, kpersen = onPersen : v.k : 0, s = onSub : v.s : 0;
       if (onPajak && !(t > 0)) throw "Pajak per unit (t) harus lebih besar dari 0.";
       if (onPersen && !(kpersen > 0)) throw "Pajak persen (k) harus lebih besar dari 0.";
       if (onSub && !(s > 0)) throw "Subsidi per unit (s) harus lebih besar dari 0.";
@@ -138,7 +138,7 @@
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
           nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P",
           nice(a - c) + " = " + nice(den) + "P",
-          "P* = " + nice(a - c) + " ÷ " + nice(den) + " = " + nice(Pe)",
+          "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe)",
           "Q* = " + nice(a) + " − " + nice(b) + " × " + nice(Pe) + " = " + nice(Qe)
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
@@ -153,7 +153,7 @@
           label: "Geser penawaran lewat belah ketupat harga: Pb = m·Ps + w",
           lines: [
             { left: "Pb = m·Ps + w", note: "hubungan harga pembeli dan penjual saat ada pajak/subsidi" },
-            { left: "w = t − s = " + nice(t) + (onSub ? " − " + nice(s) : " − 0") + " = " + nice(w), note: "belah ketupat per unit (kolom t dan s)" },
+            { left: "w = t − s = " + nice(t) + (onSub : " − " + nice(s) : " − 0") + " = " + nice(w), note: "belah ketupat per unit (kolom t dan s)" },
             { left: "m = 1 + k/100 = " + nice(m), note: "pengali pajak persen (kolom k), kalau tidak dipakai m = 1" },
             { left: nice(a) + " − " + nice(b) + "(" + nice(m) + "Ps + (" + nice(w) + ")) = " + nice(c) + " + " + nice(d) + "Ps", note: "substitusi Pb ke Qd, lalu samakan dengan Qs" },
             { left: nice(a - c - b * w) + " = " + nice(d + b * m) + "Ps", note: "konstanta ke kiri, Ps dikumpulkan di kanan" },
@@ -171,7 +171,7 @@
           label: "Sebaran beban dan penerimaan pemerintah",
           lines: [
             { left: "Pajak per unit efektif = Pb − Ps = " + nice(Pb) + " − " + nice(Ps) + " = " + nice(wedge), note: "selisih harga pembeli dan penjual" },
-            { left: (rev >= 0 ? "Penerimaan pemerintah = " : "Biaya pemerintah (subsidi) = ") +
+            { left: (rev >= 0 : "Penerimaan pemerintah = " : "Biaya pemerintah (subsidi) = ") +
                 nice(wedge) + " × " + nice(Qt) + " = " + nice(Math.abs(rev)), note: "selisih harga dikali kuantitas pasar" },
             { left: "Pembeli menanggung/menerima per unit = Pb − P* = " + nice(Pb) + " − " + nice(Pe) + " = " + nice(Pb - Pe), note: "dibanding harga keseimbangan murni" },
             { left: "Penjual menanggung/menerima per unit = P* − Ps = " + nice(Pe) + " − " + nice(Ps) + " = " + nice(Pe - Ps), note: "dibanding harga keseimbangan murni" }
@@ -195,10 +195,10 @@
         } else {
           var pbFl = m * Pmin + w;
           var qdF = a - b * pbFl, qsF = c + d * Pmin;
-          excess = qsF - qdF; excessType = excess >= 0 ? "supply" : "demand";
-          Qt = v.govBuy ? qsF : Math.min(qdF, qsF);
-          Qprod = v.govBuy ? qsF : Qt;
-          govCost = v.govBuy && excess > 0 ? Pmin * excess : 0;
+          excess = qsF - qdF; excessType = excess >= 0 : "supply" : "demand";
+          Qt = v.govBuy : qsF : Math.min(qdF, qsF);
+          Qprod = v.govBuy : qsF : Qt;
+          govCost = v.govBuy && excess > 0 : Pmin * excess : 0;
           Pb = pbFl; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
           steps.push({
             label: "Floor mengikat: kunci harga penjual di Pmin",
@@ -208,10 +208,10 @@
               { left: "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdF), note: "permintaan pada harga yang dibayar pembeli" },
               { left: "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsF), note: "penawaran pada jaminan Pmin" },
               excess >= 0
-                ? { left: "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit", note: "di atas harga itu penjual ingin menjual lebih banyak daripada yang laku" }
+                : { left: "Kelebihan penawaran = Qs − Qd = " + nice(excess) + " unit", note: "di atas harga itu penjual ingin menjual lebih banyak daripada yang laku" }
                 : { left: "Kelangkaan = Qd − Qs = " + nice(-excess) + " unit", note: "permintaan melampaui penawaran" },
               v.govBuy
-                ? { left: "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost), note: "hanya jika pemerintah menyerap kelebihan (centang)" }
+                : { left: "Biaya pembelian pemerintah = Pmin × kelebihan = " + nice(Pmin) + " × " + nice(excess) + " = " + nice(govCost), note: "hanya jika pemerintah menyerap kelebihan (centang)" }
                 : { left: "Yang terjual = min(Qd, Qs) = " + nice(Qt), note: "sisa produksi menumpuk — tidak ada yang membeli" }
             ],
             result: "Pb = " + nice(pbFl) + " · Ps = " + nice(Pmin) + " · Q = " + nice(Qt),
@@ -310,7 +310,7 @@
             excess = 0; excessType = ""; govCost = 0;
           }
           Qt = pq; Qprod = pq; Pb = pbQ; Ps = psMC; kuotaBind = true;
-          wedge = Pb - Ps; rev = hasFiscal ? (pbQ - psNet) * pq : 0;
+          wedge = Pb - Ps; rev = hasFiscal : (pbQ - psNet) * pq : 0;
           steps.push({
             label: "Kuota mengikat: kunci kuantitas di Q̄",
             lines: linesQ,
@@ -323,8 +323,8 @@
       /* surplus & dwl pada kuantitas yang benar-benar terjadi */
       var Qcs = Math.max(Math.min(Qt, a - b * Pb), 0);    /* konsumen beli Qd(Pb), bukan total produksi */
       var Qps = Qprod;                                /* produksi = kuantitas yang dipasok */
-      function csv(Q) { return Q <= 0 ? 0 : (a * Q - (Q * Q) / 2) / b - Pb * Q; }
-      function psv(Q) { return Q <= 0 ? 0 : Ps * Q - ((Q * Q) / 2 - c * Q) / d; }
+      function csv(Q) { return Q <= 0 : 0 : (a * Q - (Q * Q) / 2) / b - Pb * Q; }
+      function psv(Q) { return Q <= 0 : 0 : Ps * Q - ((Q * Q) / 2 - c * Q) / d; }
       var CS = csv(Qcs), PS = psv(Qps);
       var DWL = 0;
       if (Qt < Qe && Pb >= Ps) {
@@ -338,9 +338,9 @@
         lines: [
           { left: "CS = ∫₀^Q [Pd(q) − Pb] dq = " + nice(CS), note: "luas di bawah kurva permintaan dan di atas harga bayar Pb (Q = " + nice(Qcs) + ")" },
           { left: "PS = ∫₀^Q [Ps − Ps(q)] dq = " + nice(PS), note: "luas di atas kurva penawaran dan di bawah harga terima Ps (Q = " + nice(Qps) + ")" },
-          { left: "Total surplus = CS + PS = " + nice(CS + PS), note: DWL > 0 ? "berkurang " + nice(DWL) + " dari kondisi tanpa kebijakan (DWL)" : "tidak ada kesejahteraan yang hilang" }
+          { left: "Total surplus = CS + PS = " + nice(CS + PS), note: DWL > 0 : "berkurang " + nice(DWL) + " dari kondisi tanpa kebijakan (DWL)" : "tidak ada kesejahteraan yang hilang" }
         ],
-        result: "CS = " + nice(CS) + " · PS = " + nice(PS) + (DWL > 0 ? " · DWL = " + nice(DWL) : ""),
+        result: "CS = " + nice(CS) + " · PS = " + nice(PS) + (DWL > 0 : " · DWL = " + nice(DWL) : ""),
         why: "Surplus konsumen adalah luas di bawah kurva permintaan dan di atas harga bayar Pb; surplus produsen luas di atas kurva penawaran dan di bawah harga terima Ps — keduanya dihitung lewat integral pada kuantitas yang benar-benar terjadi. Karena kuantitas berkurang dari Q*, ada luas segitiga yang tidak sempat menjadi surplus siapa pun: itulah deadweight loss, tanda kebijakan menimbulkan inefficiency."
       });
 
@@ -357,7 +357,7 @@
           " (tanpa kebijakan: " + nice(Pe) + " / " + nice(Qe) + ").";
         if (excess > 0 && excessType === "supply") {
           status += " Kelebihan penawaran " + nice(excess) + " unit" +
-            (govCost > 0 ? " diserap pemerintah dengan biaya " + nice(govCost) + "." : " menumpuk / tidak terjual.");
+            (govCost > 0 : " diserap pemerintah dengan biaya " + nice(govCost) + "." : " menumpuk / tidak terjual.");
         }
         if (excess > 0 && excessType === "demand") {
           status += " Kelangkaan " + nice(excess) + " unit — permintaan tidak terlayani.";
@@ -367,14 +367,14 @@
       var results = [
         { label: "Harga keseimbangan P*", value: nice(Pe), hero: true },
         { label: "Kuantitas keseimbangan Q*", value: nice(Qe), hero: true },
-        { label: "Harga dibayar pembeli (Pb)", value: nice(Pb), sub: policies.length ? "" : "sama dengan P*" },
-        { label: "Harga diterima penjual (Ps)", value: nice(Ps), sub: policies.length ? "" : "sama dengan P*" },
+        { label: "Harga dibayar pembeli (Pb)", value: nice(Pb), sub: policies.length : "" : "sama dengan P*" },
+        { label: "Harga diterima penjual (Ps)", value: nice(Ps), sub: policies.length : "" : "sama dengan P*" },
         { label: "Kuantitas setelah kebijakan", value: nice(Qt) },
-        { label: "Selisih harga (Pb − Ps)", value: nice(wedge), sub: hasFiscal ? "= belah ketupat (pajak − subsidi)" : onKuota ? "= rent kuota" : "" },
+        { label: "Selisih harga (Pb − Ps)", value: nice(wedge), sub: hasFiscal : "= belah ketupat (pajak − subsidi)" : onKuota : "= rent kuota" : "" },
         { label: "Surplus konsumen", value: nice(CS) },
         { label: "Surplus produsen", value: nice(PS) },
         { label: "Total surplus", value: nice(CS + PS) },
-        { label: "Deadweight loss", value: nice(DWL), sub: DWL > 0 ? "kesejahteraan yang hilang" : "—" }
+        { label: "Deadweight loss", value: nice(DWL), sub: DWL > 0 : "kesejahteraan yang hilang" : "—" }
       ];
       if (excess > 0 && excessType === "supply") results.push({ label: "Kelebihan penawaran", value: nice(excess), sub: "excess supply" });
       if (excess > 0 && excessType === "demand") results.push({ label: "Kelangkaan", value: nice(excess), sub: "excess demand" });
@@ -383,7 +383,7 @@
       else if (rev < 0) results.push({ label: "Biaya subsidi", value: nice(-rev), sub: "(Pb − Ps) × Q" });
 
       /* ---------- grafik: kurva memakai persamaan & angka yang sama dengan langkah ---------- */
-      var yTop = Math.max(choke, Pe, Pb, Ps, onFloor ? Pmin || 0 : 0, onCeil ? Pmax || 0 : 0, 1) * 1.12;
+      var yTop = Math.max(choke, Pe, Pb, Ps, onFloor : Pmin || 0 : 0, onCeil : Pmax || 0 : 0, 1) * 1.12;
       var xTop = Math.max(a, c + d * yTop, Qe * 1.05, Qt * 1.15, Qprod * 1.15, 1) * 1.05;
       var series = [
         { label: "Qd = " + nice(a) + " − " + nice(b) + "P", color: "demand", pts: [[0, choke], [a, 0]] },
@@ -391,8 +391,8 @@
       ];
       if (hasFiscal) {
         var qLabel = "Qs′ = " + nice(c) + " + " + nice(d) + "(P" +
-          (w < -1e-9 ? " + " + nice(-w) : Math.abs(w) > 1e-9 ? " − " + nice(w) : "") + ")" +
-          (Math.abs(m - 1) > 1e-9 ? " / " + nice(m) : "") + " (efektif)";
+          (w < -1e-9 : " + " + nice(-w) : Math.abs(w) > 1e-9 : " − " + nice(w) : "") + ")" +
+          (Math.abs(m - 1) > 1e-9 : " / " + nice(m) : "") + " (efektif)";
         series.push({
           label: qLabel, color: "supply", dash: true,
           pts: [
@@ -405,7 +405,7 @@
       if (v.surplus) {
         regions.push({ pts: [[0, choke], [Qcs, Pb], [0, Pb]], color: "demand", opacity: 0.16, label: "CS" });
         var psPts = Ps0 >= 0
-          ? [[0, Ps], [Qps, Ps], [Qps, (Qps - c) / d], [0, Ps0]]
+          : [[0, Ps], [Qps, Ps], [Qps, (Qps - c) / d], [0, Ps0]]
           : [[0, Ps], [Qps, Ps], [Qps, (Qps - c) / d], [c, 0], [0, 0]];
         regions.push({ pts: psPts, color: "supply", opacity: 0.16, label: "PS" });
       }
@@ -450,12 +450,12 @@
       }
 
       var subChart = "Semua kurva dan angka mengikuti persamaan serta langkah di atas — E = keseimbangan murni, Q′ = titik setelah kebijakan" +
-        (hasFiscal ? "; kurva putus-putus Qs′ = penawaran efektif setelah belah ketupat" : "") +
-        (floorBind ? "; floor mengikat: kelebihan penawaran di sisi kanan titik potong" : onFloor ? "; floor di bawah Ps → tidak mengikat" : "") +
-        (ceilBind ? "; ceiling mengikat → kelangkaan" : onCeil ? "; ceiling di atas Pb → tidak mengikat" : "") +
-        (onKuota && kuotaBind ? "; garis tegak kuota = Q̄" : "") + ".";
+        (hasFiscal : "; kurva putus-putus Qs′ = penawaran efektif setelah belah ketupat" : "") +
+        (floorBind : "; floor mengikat: kelebihan penawaran di sisi kanan titik potong" : onFloor : "; floor di bawah Ps → tidak mengikat" : "") +
+        (ceilBind : "; ceiling mengikat → kelangkaan" : onCeil : "; ceiling di atas Pb → tidak mengikat" : "") +
+        (onKuota && kuotaBind : "; garis tegak kuota = Q̄" : "") + ".";
       var charts = [{
-        title: "Keseimbangan pasar" + (policies.length ? " — " + policies.join(" + ") : ""),
+        title: "Keseimbangan pasar" + (policies.length : " — " + policies.join(" + ") : ""),
         sub: subChart,
         xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
         xDomain: [0, xTop], yDomain: [0, yTop],
@@ -548,8 +548,8 @@
         steps.push({
           label: "Interpretasi",
           lines: [
-            { left: Math.abs(E) > 1 ? "|Ep| &gt; 1 → permintaan elastis"
-              : Math.abs(E) < 1 ? "|Ep| &lt; 1 → permintaan inelastis"
+            { left: Math.abs(E) > 1 : "|Ep| &gt; 1 → permintaan elastis"
+              : Math.abs(E) < 1 : "|Ep| &lt; 1 → permintaan inelastis"
                 : "|Ep| = 1 → permintaan elastis unitary", note: "sifat permintaan pada titik uji" },
             { left: "Jika harga naik 1%, Q berubah sekitar " + nice(E) + "%", note: "kuantitas bergerak berlawanan arah dengan harga" },
             { left: "TR = P × Q = " + nice(P) + " × " + nice(Q) + " = " + nice(P * Q), note: "penerimaan total pada titik uji, sebagai pembanding" }
@@ -558,9 +558,9 @@
         });
         status = "Permintaan " + klasifikasi(E) + ". " +
           (Math.abs(E) > 1
-            ? "Karena elastis, menurunkan harga menaikkan total penerimaan (TR = P × Q)."
+            : "Karena elastis, menurunkan harga menaikkan total penerimaan (TR = P × Q)."
             : Math.abs(E) < 1
-              ? "Karena inelastis, menaikkan harga justru menaikkan total penerimaan."
+              : "Karena inelastis, menaikkan harga justru menaikkan total penerimaan."
               : "Kenaikan/penurunan harga tidak mengubah total penerimaan.");
         results = [
           { label: "Elastisitas harga Ep", value: nice(E), hero: true },
@@ -621,7 +621,7 @@
           title: "Elastisitas busur antara dua titik",
           sub: "Garis penghubung kedua pengamatan menjadi penaksiran kurva permintaan; elastisitas busur dihitung dari perubahan relatif, sehingga nilainya mewakili seluruh rentang antara titik 1 dan titik 2, bukan kemiringan garisnya.",
           xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
-          series: [{ label: "P = " + (linP(0) < 0 ? "−" + nice(-linP(0)) : nice(linP(0))) + (slope < 0 ? " − " + nice(-slope) : " + " + nice(slope)) + "Q", color: "demand", fn: linP, xRange: [qmin, qmax] }],
+          series: [{ label: "P = " + (linP(0) < 0 : "−" + nice(-linP(0)) : nice(linP(0))) + (slope < 0 : " − " + nice(-slope) : " + " + nice(slope)) + "Q", color: "demand", fn: linP, xRange: [qmin, qmax] }],
           points: [
             { x: q1, y: p1, color: "ink", label: "1 (" + nice(q1) + "; " + nice(p1) + ")" },
             { x: q2, y: p2, color: "blue", label: "2 (" + nice(q2) + "; " + nice(p2) + ")", dy: 14 }
@@ -649,10 +649,10 @@
           result: "Exy = " + nice(Exy),
           why: "Elastisitas silang membandingkan perubahan jumlah barang X dengan perubahan harga barang Y. Tandanya yang paling penting: positif berarti kedua barang saling menggantikan, negatif berarti saling melengkapi. Besarnya angka menunjukkan seberapa kuat hubungan itu."
         });
-        var jenis = Exy > 0 ? "substitusi (Exy &gt; 0)" : Exy < 0 ? "komplementer (Exy &lt; 0)" : "tidak berhubungan (Exy = 0)";
+        var jenis = Exy > 0 : "substitusi (Exy &gt; 0)" : Exy < 0 : "komplementer (Exy &lt; 0)" : "tidak berhubungan (Exy = 0)";
         status = "X dan Y adalah barang " + jenis + ". " +
           (Exy > 0
-            ? "Naiknya harga Y membuat konsumen pindah ke X."
+            : "Naiknya harga Y membuat konsumen pindah ke X."
             : "Naiknya harga Y menurunkan konsumsi X karena keduanya dipakai bersama.");
         results = [
           { label: "Elastisitas silang Exy", value: nice(Exy), hero: true },
@@ -668,7 +668,7 @@
           xLabel: "Harga barang Y (Py)", yLabel: "Kuantitas X (Qx)",
           series: [{
             label: isFinite(slX)
-              ? "Qx = " + (icX < 0 ? "−" + nice(-icX) : nice(icX)) + (slX < 0 ? " − " + nice(-slX) : " + " + nice(slX)) + "Py"
+              : "Qx = " + (icX < 0 : "−" + nice(-icX) : nice(icX)) + (slX < 0 : " − " + nice(-slX) : " + " + nice(slX)) + "Py"
               : "Qx = " + nice(cq1) + " (Py tetap)",
             color: "blue", pts: [[cp1, cq1], [cp2, cq2]]
           }],
@@ -699,7 +699,7 @@
           result: "EI = " + nice(Ei),
           why: "Elastisitas pendapatan membandingkan perubahan jumlah yang diminta dengan perubahan pendapatan. Tandanya menentukan jenis barang: negatif berarti inferior, positif berarti normal, dan di atas 1 berarti mewah. Angka persen yang dibagi di sini adalah hasil langkah sebelumnya."
         });
-        var kategori = Ei < 0 ? "barang inferior (EI &lt; 0)" : Ei < 1 ? "barang normal pokok (0 &lt; EI &lt; 1)" : "barang normal mewah / luxury (EI &gt; 1)";
+        var kategori = Ei < 0 : "barang inferior (EI &lt; 0)" : Ei < 1 : "barang normal pokok (0 &lt; EI &lt; 1)" : "barang normal mewah / luxury (EI &gt; 1)";
         status = "Barang tersebut tergolong " + kategori + ".";
         results = [
           { label: "Elastisitas pendapatan EI", value: nice(Ei), hero: true },
@@ -715,7 +715,7 @@
           xLabel: "Pendapatan (I)", yLabel: "Kuantitas (Q)",
           series: [{
             label: isFinite(slI)
-              ? "Q = " + (icI < 0 ? "−" + nice(-icI) : nice(icI)) + (slI < 0 ? " − " + fmt(-slI, 8) : " + " + fmt(slI, 8)) + "I"
+              : "Q = " + (icI < 0 : "−" + nice(-icI) : nice(icI)) + (slI < 0 : " − " + fmt(-slI, 8) : " + " + fmt(slI, 8)) + "I"
               : "Q = " + nice(iq1) + " (I tetap)",
             color: "supply", pts: [[ii1, iq1], [ii2, iq2]]
           }],
@@ -746,11 +746,11 @@
           result: "Es = " + nice(Es),
           why: "Elastisitas penawaran membandingkan perubahan jumlah yang ditawarkan dengan perubahan harga. Hasilnya positif karena harga dan kuantitas penawaran bergerak searah. Angka yang dibagi adalah persentase dari langkah sebelumnya."
         });
-        status = "Penawaran " + (Math.abs(Es) > 1 ? "elastis (Es &gt; 1)" : Math.abs(Es) < 1 ? "inelastis (Es &lt; 1)" : "elastis unitary (Es = 1)") +
+        status = "Penawaran " + (Math.abs(Es) > 1 : "elastis (Es &gt; 1)" : Math.abs(Es) < 1 : "inelastis (Es &lt; 1)" : "elastis unitary (Es = 1)") +
           ". Bernotasi positif karena harga dan kuantitas penawaran bergerak searah.";
         results = [
           { label: "Elastisitas penawaran Es", value: nice(Es), hero: true },
-          { label: "Klasifikasi", value: Math.abs(Es) > 1 ? "elastis" : Math.abs(Es) < 1 ? "inelastis" : "unitary" },
+          { label: "Klasifikasi", value: Math.abs(Es) > 1 : "elastis" : Math.abs(Es) < 1 : "inelastis" : "unitary" },
           { label: "%Δ Qs", value: nice(dqs) + " %" },
           { label: "%Δ P", value: nice(dps) + " %" }
         ];
@@ -762,7 +762,7 @@
           xLabel: "Kuantitas (Qs)", yLabel: "Harga (P)",
           series: [{
             label: isFinite(slS)
-              ? "P = " + (icS < 0 ? "−" + nice(-icS) : nice(icS)) + (slS < 0 ? " − " + fmt(-slS, 6) : " + " + fmt(slS, 6)) + "Qs"
+              : "P = " + (icS < 0 : "−" + nice(-icS) : nice(icS)) + (slS < 0 : " − " + fmt(-slS, 6) : " + " + fmt(slS, 6)) + "Qs"
               : "P = " + nice(sp1) + " (Qs tetap)",
             color: "supply", pts: [[sq1, sp1], [sq2, sp2]]
           }],
@@ -803,17 +803,17 @@
       if (!(b > 0) || !(d > 0)) throw "Koefisien b dan d harus lebih besar dari 0.";
 
       var h = surplusHelpers(a, b, c, d), Pe = h.Pe, Qe = h.Qe;
-      var P = v.Pmode === "custom" ? v.Pcustom : Pe;
+      var P = v.Pmode === "custom" : v.Pcustom : Pe;
       if (!ok(P)) throw "Isi harga yang ingin diuji.";
       if (!(P > 0)) throw "Harga harus lebih besar dari 0.";
 
       var Qd = a - b * P, Qs = c + d * P;
       var Qt = Math.min(Qd, Qs);
       if (Qt < 0) Qt = 0;
-      var CS = Qt > 0 ? (a * Qt - (Qt * Qt) / 2) / b - P * Qt : 0;
-      var PS = Qt > 0 ? P * Qt - ((Qt * Qt) / 2 - c * Qt) / d : 0;
+      var CS = Qt > 0 : (a * Qt - (Qt * Qt) / 2) / b - P * Qt : 0;
+      var PS = Qt > 0 : P * Qt - ((Qt * Qt) / 2 - c * Qt) / d : 0;
       var pdQ = (a - Qt) / b, psQ = (Qt - c) / d;
-      var DWL = Qt < Qe ? Math.max(0, 0.5 * (pdQ - psQ) * (Qe - Qt)) : 0;
+      var DWL = Qt < Qe : Math.max(0, 0.5 * (pdQ - psQ) * (Qe - Qt)) : 0;
 
       var steps = [
         {
@@ -831,7 +831,7 @@
           lines: [
             { left: "Pada P = " + nice(P), note: "Qd = " + nice(Qd) + " ; Qs = " + nice(Qs) },
             { left: "Yang ditransaksikan = min(Qd, Qs)", note: nice(Qt) },
-            { left: (Qd > Qs ? "Kelangkaan" : (Qs > Qd ? "Kelebihan penawaran" : "Seimbang")), note: (Qd > Qs ? (nice(Qd - Qs) + " unit") : (Qs > Qd ? (nice(Qs - Qd) + " unit") : "Q = Q*")) }
+            { left: (Qd > Qs : "Kelangkaan" : (Qs > Qd : "Kelebihan penawaran" : "Seimbang")), note: (Qd > Qs : (nice(Qd - Qs) + " unit") : (Qs > Qd : (nice(Qs - Qd) + " unit") : "Q = Q*")) }
           ],
           why: "Pada harga P yang dipakai, kuantitas diminta dan ditawarkan dihitung terpisah dari fungsi masing-masing. Yang benar-benar ditransaksikan adalah yang lebih kecil, karena tidak ada yang bisa membeli barang yang tidak diproduksi atau menjual barang yang tidak diminta. Selisih Qd dan Qs menunjukkan apakah harga itu menimbulkan kelangkaan atau kelebihan penawaran."
         },
@@ -867,7 +867,7 @@
         { label: "Harga yang dipakai", value: nice(P) },
         { label: "Kuantitas ditransaksikan", value: nice(Qt) },
         { label: "Keseimbangan (Q*; P*)", value: nice(Qe) + " ; " + nice(Pe) },
-        { label: "Kelebihan / kelangkaan", value: nice(Math.abs(Qd - Qs)) + (Qs > Qd ? " (supply)" : Qd > Qs ? " (demand)" : " —") }
+        { label: "Kelebihan / kelangkaan", value: nice(Math.abs(Qd - Qs)) + (Qs > Qd : " (supply)" : Qd > Qs : " (demand)" : " —") }
       ];
 
       var yTop = Math.max(a / b, Pe, P) * 1.12;
@@ -885,7 +885,7 @@
         regions: [
           { pts: [[0, a / b], [Qt, P], [0, P]], color: "demand", opacity: 0.18 },
           { pts: [[0, P], [Qt, P], [Qt, psQ], [0, -c / d]], color: "supply", opacity: 0.18 }
-        ].concat(DWL > 0 ? [{ pts: [[Qt, pdQ], [Qe, Pe], [Qt, psQ]], color: "amber", opacity: 0.34 }] : []),
+        ].concat(DWL > 0 : [{ pts: [[Qt, pdQ], [Qe, Pe], [Qt, psQ]], color: "amber", opacity: 0.34 }] : []),
         hlines: [{ y: P, label: "P = " + nice(P), color: "blue" }],
         vlines: [{ x: Qt, label: "Q = " + nice(Qt) }],
         points: [{ x: Qe, y: Pe, color: "ink", label: "E (" + nice(Qe) + "; " + nice(Pe) + ")" }]
@@ -894,7 +894,7 @@
       return {
         steps: steps, results: results, charts: charts, notes: [],
         status: "Pada harga " + nice(P) + ", surplus konsumen " + nice(CS) + " dan surplus produsen " + nice(PS) +
-          (DWL > 0 ? "; hilang " + nice(DWL) + " karena kuantitas menyusut di bawah keseimbangan." : ".")
+          (DWL > 0 : "; hilang " + nice(DWL) + " karena kuantitas menyusut di bawah keseimbangan." : ".")
       };
     }
   };
@@ -1050,13 +1050,13 @@
       function MP(x) { return a + 2 * b * x - 3 * c * x * x; }
       function AP(x) { return a + b * x - c * x * x; }
 
-      var Lap = c > 0 ? b / (2 * c) : Infinity;
-      var APmax = isFinite(Lap) ? AP(Lap) : AP(Lmax);
+      var Lap = c > 0 : b / (2 * c) : Infinity;
+      var APmax = isFinite(Lap) : AP(Lap) : AP(Lmax);
       var mpRoots = roots2(-3 * c, 2 * b, a).filter(function (r) { return r > 0; });
-      var Ltpmax = mpRoots.length ? Math.max.apply(null, mpRoots) : NaN;
-      var TPmax = isFinite(Ltpmax) ? TP(Ltpmax) : NaN;
-      var Lmpmax = c > 0 ? b / (3 * c) : NaN;
-      var MPmax = isFinite(Lmpmax) ? MP(Lmpmax) : NaN;
+      var Ltpmax = mpRoots.length : Math.max.apply(null, mpRoots) : NaN;
+      var TPmax = isFinite(Ltpmax) : TP(Ltpmax) : NaN;
+      var Lmpmax = c > 0 : b / (3 * c) : NaN;
+      var MPmax = isFinite(Lmpmax) : MP(Lmpmax) : NaN;
 
       var tp = TP(L), mp = MP(L), ap = AP(L);
       var tahap, saran;
@@ -1122,7 +1122,7 @@
         { label: "AP maksimum pada L", value: nice(Lap), sub: "AP maks = " + nice(APmax) },
         { label: "TP maksimum pada L", value: nice(Ltpmax), sub: "TP maks = " + nice(TPmax) },
         { label: "MP maksimum pada L", value: nice(Lmpmax), sub: "MP maks = " + nice(MPmax) },
-        { label: "MRTS (MPL/MPK)", value: isFinite(MPmax) ? "butuh data K" : "—", sub: "MPL = " + nice(mp) }
+        { label: "MRTS (MPL/MPK)", value: isFinite(MPmax) : "butuh data K" : "—", sub: "MPL = " + nice(mp) }
       ];
 
       var xr = [0, Lmax];
@@ -1139,7 +1139,7 @@
       var charts = [{
         title: "Produksi total, marjinal, dan rata-rata",
         sub: "Kurva TP, MP, dan AP dari fungsi yang sama dengan langkah di atas: MP memotong AP di titik AP maksimum, dan TP mencapai puncak saat MP = 0." +
-          (isFinite(Lap) && isFinite(Ltpmax) ? " Pita hijau menandai tahap rasional antara L = " + nice(Lap) + " dan L = " + nice(Ltpmax) + "." : ""),
+          (isFinite(Lap) && isFinite(Ltpmax) : " Pita hijau menandai tahap rasional antara L = " + nice(Lap) + " dan L = " + nice(Ltpmax) + "." : ""),
         xLabel: "Tenaga kerja (L)", yLabel: "Output (TP)", yLabel2: "MP & AP",
         xDomain: xr, yDomain: [0, yTop1], yDomain2: [Math.min(0, mp), yTop2],
         series: [
@@ -1188,13 +1188,13 @@
 
       function VC(x) { return p * x + q * x * x + r * x * x * x; }
       function TC(x) { return FC + VC(x); }
-      function AC(x) { return x > 0 ? TC(x) / x : NaN; }
-      function AVC(x) { return x > 0 ? VC(x) / x : NaN; }
-      function AFC(x) { return x > 0 ? FC / x : NaN; }
+      function AC(x) { return x > 0 : TC(x) / x : NaN; }
+      function AVC(x) { return x > 0 : VC(x) / x : NaN; }
+      function AFC(x) { return x > 0 : FC / x : NaN; }
       function MC(x) { return p + 2 * q * x + 3 * r * x * x; }
 
-      var Qavc = (r > 0 && q < 0) ? -q / (2 * r) : NaN;
-      var Qmc = (r > 0 && q < 0) ? -q / (3 * r) : NaN;
+      var Qavc = (r > 0 && q < 0) : -q / (2 * r) : NaN;
+      var Qmc = (r > 0 && q < 0) : -q / (3 * r) : NaN;
       var Qac = findRoot(function (x) { return MC(x) - AC(x); }, Math.max(1e-4, Q / 200), Math.max(10, Q * 3));
       if (!isFinite(Qac)) Qac = NaN;
 
@@ -1223,7 +1223,7 @@
             { left: "AFC = FC/Q", note: nice(FC) + " / " + nice(Q) + " = " + nice(afc) },
             { left: "AC = AVC + AFC", note: nice(ac) + " = " + nice(avc) + " + " + nice(afc) },
             { left: "MC(" + nice(Q) + ")", note: nice(mc) },
-            mc < ac ? { left: "MC < AC", note: "biaya rata-rata masih menurun" } : { left: "MC > AC", note: "biaya rata-rata sedang naik" }
+            mc < ac : { left: "MC < AC", note: "biaya rata-rata masih menurun" } : { left: "MC > AC", note: "biaya rata-rata sedang naik" }
           ],
           result: "TC = " + nice(t) + " · AC = " + nice(ac) + " · MC = " + nice(mc),
           why: "Semua biaya dievaluasi pada kuantitas Q yang kamu isi. AC = TC/Q dan AVC = VC/Q, sedangkan AFC = FC/Q, sehingga AC harus sama dengan AVC + AFC. MC dihitung dari turunan TC dan dibandingkan dengan AC untuk melihat apakah biaya rata-rata sedang turun atau naik."
@@ -1272,18 +1272,18 @@
         { label: "AVC pada Q", value: nice(avc) },
         { label: "AFC pada Q", value: nice(afc) },
         { label: "VC pada Q", value: nice(VC(Q)) },
-        { label: "Q pada AVC minimum", value: nice(Qavc), sub: "AVC min = " + nice(isFinite(Qavc) ? AVC(Qavc) : NaN) },
-        { label: "Q pada AC minimum", value: nice(Qac), sub: "AC min = " + nice(isFinite(Qac) ? AC(Qac) : NaN) },
-        { label: "Q pada MC minimum", value: nice(Qmc), sub: "MC min = " + nice(isFinite(Qmc) ? MC(Qmc) : NaN) },
-        { label: "Skala", value: isFinite(Qac) ? (Q < Qac ? "economies of scale (AC masih turun)" : "diseconomies of scale (AC naik)") : "—" }
+        { label: "Q pada AVC minimum", value: nice(Qavc), sub: "AVC min = " + nice(isFinite(Qavc) : AVC(Qavc) : NaN) },
+        { label: "Q pada AC minimum", value: nice(Qac), sub: "AC min = " + nice(isFinite(Qac) : AC(Qac) : NaN) },
+        { label: "Q pada MC minimum", value: nice(Qmc), sub: "MC min = " + nice(isFinite(Qmc) : MC(Qmc) : NaN) },
+        { label: "Skala", value: isFinite(Qac) : (Q < Qac : "economies of scale (AC masih turun)" : "diseconomies of scale (AC naik)") : "—" }
       ];
 
-      var Qstart = Math.max(0.5, (isFinite(Qac) ? Qac / 10 : 1));
-      var Qmax = Math.max(20, isFinite(Qac) ? Qac * 3 : 20, Q * 2.5);
+      var Qstart = Math.max(0.5, (isFinite(Qac) : Qac / 10 : 1));
+      var Qmax = Math.max(20, isFinite(Qac) : Qac * 3 : 20, Q * 2.5);
       var yTop = 0;
       for (var i = 0; i <= 60; i++) {
         var x = Qstart + (Qmax - Qstart) * (i / 60);
-        yTop = Math.max(yTop, isFinite(AC(x)) ? AC(x) : 0, isFinite(AVC(x)) ? AVC(x) : 0, MC(x));
+        yTop = Math.max(yTop, isFinite(AC(x)) : AC(x) : 0, isFinite(AVC(x)) : AVC(x) : 0, MC(x));
       }
       yTop *= 1.08;
       var charts = [{
@@ -1292,27 +1292,27 @@
         xLabel: "Kuantitas produksi (Q)", yLabel: "Biaya per unit / marjinal",
         xDomain: [0, Qmax], yDomain: [0, yTop],
         series: [
-          { label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Qstart, Qmax], n: 160 },
-          { label: "AVC = " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "demand", fn: AVC, xRange: [Qstart, Qmax], n: 160 },
+          { label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 : "" : (q < 0 : " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 : "" : (r < 0 : " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Qstart, Qmax], n: 160 },
+          { label: "AVC = " + nice(p) + (q === 0 : "" : (q < 0 : " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 : "" : (r < 0 : " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "demand", fn: AVC, xRange: [Qstart, Qmax], n: 160 },
           { label: "AFC = " + nice(FC) + "/Q", color: "muted", dash: true, fn: AFC, xRange: [Qstart, Qmax], n: 160 },
-          { label: "MC = " + nice(p) + (2 * q === 0 ? "" : (2 * q < 0 ? " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 ? "" : (3 * r < 0 ? " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [Qstart, Qmax], n: 160 }
+          { label: "MC = " + nice(p) + (2 * q === 0 : "" : (2 * q < 0 : " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 : "" : (3 * r < 0 : " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [Qstart, Qmax], n: 160 }
         ],
         vlines: [
           { x: Q, label: "Q uji = " + nice(Q), color: "ink" },
-          isFinite(Qavc) ? { x: Qavc, label: "AVC min = " + nice(Qavc), color: "demand" } : null,
-          isFinite(Qac) ? { x: Qac, label: "AC min = " + nice(Qac), color: "blue" } : null
+          isFinite(Qavc) : { x: Qavc, label: "AVC min = " + nice(Qavc), color: "demand" } : null,
+          isFinite(Qac) : { x: Qac, label: "AC min = " + nice(Qac), color: "blue" } : null
         ].filter(Boolean),
         points: [
           { x: Q, y: ac, color: "blue", label: "AC = " + nice(ac) },
           { x: Q, y: mc, color: "supply", label: "MC = " + nice(mc), dy: 14 },
-          isFinite(Qac) ? { x: Qac, y: AC(Qac), color: "ink", label: "impas " + nice(AC(Qac)), dy: -12 } : null
+          isFinite(Qac) : { x: Qac, y: AC(Qac), color: "ink", label: "impas " + nice(AC(Qac)), dy: -12 } : null
         ].filter(Boolean)
       }];
 
       return {
         steps: steps, results: results, charts: charts, notes: [],
         status: "Pada Q = " + nice(Q) + ": TC = " + nice(t) + ", AC = " + nice(ac) + ", MC = " + nice(mc) + ". " +
-          (isFinite(Qac) ? "Titik impas pada Q ≈ " + nice(Qac) + " dengan AC minimum " + nice(AC(Qac)) + "." : "")
+          (isFinite(Qac) : "Titik impas pada Q ≈ " + nice(Qac) + " dengan AC minimum " + nice(AC(Qac)) + "." : "")
       };
     }
   };
@@ -1350,8 +1350,8 @@
 
       function TC(Q) { return FC + p * Q + q * Q * Q + r * Q * Q * Q; }
       function MC(Q) { return p + 2 * q * Q + 3 * r * Q * Q; }
-      function AC(Q) { return Q > 0 ? TC(Q) / Q : NaN; }
-      function AVC(Q) { return Q > 0 ? (p * Q + q * Q * Q + r * Q * Q * Q) / Q : NaN; }
+      function AC(Q) { return Q > 0 : TC(Q) / Q : NaN; }
+      function AVC(Q) { return Q > 0 : (p * Q + q * Q * Q + r * Q * Q * Q) / Q : NaN; }
 
       var Q, P, steps = [], notes = [];
 
@@ -1414,8 +1414,8 @@
       }
 
       var TR = P * Q, tc = TC(Q), profit = TR - tc, ac = AC(Q), avc = AVC(Q), mc = MC(Q);
-      var Qavc = (r > 0 && q < 0) ? -q / (2 * r) : NaN;
-      var avcMin = isFinite(Qavc) ? AVC(Qavc) : NaN;
+      var Qavc = (r > 0 && q < 0) : -q / (2 * r) : NaN;
+      var avcMin = isFinite(Qavc) : AVC(Qavc) : NaN;
 
       steps.push({
         label: "Hitung laba",
@@ -1449,14 +1449,14 @@
         { label: "TR", value: nice(TR) },
         { label: "TC", value: nice(tc) },
         { label: "AC pada Q*", value: nice(ac), sub: "AVC = " + nice(avc) },
-        { label: "MR dan MC pada Q*", value: nice(seg === "monopoli" ? a - 2 * b * Q : P) + " ; " + nice(mc) },
+        { label: "MR dan MC pada Q*", value: nice(seg === "monopoli" : a - 2 * b * Q : P) + " ; " + nice(mc) },
         { label: "Margin per unit", value: nice(P - ac) },
         { label: "P − MC (kekuatan harga)", value: nice(P - mc) },
-        { label: "Titik impas (P = AC)", value: isFinite(Qavc) ? "AVC min = " + nice(avcMin) : "—" }
+        { label: "Titik impas (P = AC)", value: isFinite(Qavc) : "AVC min = " + nice(avcMin) : "—" }
       ];
 
       var yTopCand = [P, mc, ac];
-      var Qmax = seg === "monopoli" ? Math.max(a / b, Q * 1.4) : Math.max(Q * 2.2, 1);
+      var Qmax = seg === "monopoli" : Math.max(a / b, Q * 1.4) : Math.max(Q * 2.2, 1);
       for (var i2 = 0; i2 <= 40; i2++) {
         var xx = (Qmax) * (i2 / 40);
         if (xx > 0) yTopCand.push(AC(xx), MC(xx));
@@ -1470,21 +1470,21 @@
       } else {
         series.push({ label: "P = MR = AR = " + nice(P), color: "demand", pts: [[0, P], [Qmax, P]] });
       }
-      series.push({ label: "MC = " + nice(p) + (2 * q === 0 ? "" : (2 * q < 0 ? " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 ? "" : (3 * r < 0 ? " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [0, Qmax], n: 120 });
-      if (FC > 0) series.push({ label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Math.max(Qmax / 40, 0.1), Qmax], n: 120 });
+      series.push({ label: "MC = " + nice(p) + (2 * q === 0 : "" : (2 * q < 0 : " − " + nice(-2 * q) : " + " + nice(2 * q)) + "Q") + (3 * r === 0 : "" : (3 * r < 0 : " − " + nice(-3 * r) : " + " + nice(3 * r)) + "Q²"), color: "supply", fn: MC, xRange: [0, Qmax], n: 120 });
+      if (FC > 0) series.push({ label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 : "" : (q < 0 : " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 : "" : (r < 0 : " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Math.max(Qmax / 40, 0.1), Qmax], n: 120 });
       vlines.push({ x: Q, label: "Q* = " + nice(Q), color: "ink" });
       hlines.push({ y: P, label: "P* = " + nice(P), color: "blue" });
       if (profit !== 0 && isFinite(ac)) {
         regions.push({
           pts: [[0, P], [Q, P], [Q, ac], [0, ac]],
-          color: profit > 0 ? "supply" : "demand", opacity: 0.18
+          color: profit > 0 : "supply" : "demand", opacity: 0.18
         });
       }
       points.push({ x: Q, y: P, color: "ink", label: "E* (" + nice(Q) + "; " + nice(P) + ")" });
       points.push({ x: Q, y: mc, color: "supply", label: "MC = " + nice(mc), dy: 14 });
 
       var charts = [{
-        title: seg === "monopoli" ? "Keseimbangan monopoli (MR = MC)" : "Keseimbangan persaingan sempurna (P = MC)",
+        title: seg === "monopoli" : "Keseimbangan monopoli (MR = MC)" : "Keseimbangan persaingan sempurna (P = MC)",
         sub: "Daerah terwarnai adalah selisih harga dan biaya rata-rata dikali kuantitas: hijau berarti laba, merah berarti rugi. Titik E* menunjukkan kuantitas dan harga tempat MR = MC, dan garis P* memperlihatkan harga yang dibaca dari kurva permintaan.",
         xLabel: "Kuantitas (Q)", yLabel: "Harga & biaya per unit",
         xDomain: [0, Qmax], yDomain: [0, yTop],
@@ -1522,7 +1522,7 @@
       for (iter = 0; iter < 25; iter++) {
         var sumA = 0, sumB = 0, anyChange = false;
         for (i = 0; i < 2; i++) {
-          var ai = i === 0 ? a1 : a2, bi = i === 0 ? b1 : b2;
+          var ai = i === 0 : a1 : a2, bi = i === 0 : b1 : b2;
           var q = (ai - bi * m) / 2;
           var act = q > 1e-9;
           if (act !== active[i]) anyChange = true;
@@ -1558,7 +1558,7 @@
             { left: "Pasar 2: Q2 = " + nice(a2) + " − " + nice(b2) + "P2", note: "permintaan pasar 2" },
             { left: "P2 = (" + nice(a2) + " − Q2)/" + nice(b2), note: "bentuk invers" },
             { left: "MR2 = P2 − Q2/b2", note: "kemiringan 2x dari P2" },
-            { left: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "Q" : ""), note: "biaya marjinal total" }
+            { left: "MC = " + nice(c0) + (c1 > 0 : " + " + nice(c1) + "Q" : ""), note: "biaya marjinal total" }
           ],
           why: "Permintaan tiap pasar dibalik menjadi harga sebagai fungsi kuantitas, lalu diturunkan menjadi MR. Pada permintaan linear, MR punya intersep sama tetapi kemiringannya dua kali lebih curam. Angka a1, b1, a2, b2 berasal dari kolom input, sedangkan MC dari c0 dan c1."
         },
@@ -1569,7 +1569,7 @@
             { left: "Q2 = (" + nice(a2) + " − " + nice(b2) + "m)/2", note: "dari MR2 = m" },
             { left: "QTotal = (" + nice(a1 + a2) + " − " + nice(b1 + b2) + "m)/2", note: "penjumlahan horizontal" },
             c1 > 0
-              ? { left: "m = MC(QTotal)", note: "MRt = MC → m = " + nice(m) }
+              : { left: "m = MC(QTotal)", note: "MRt = MC → m = " + nice(m) }
               : { left: "m = MC konstan", note: nice(m) }
           ],
           result: "MR bersama = " + nice(m),
@@ -1659,7 +1659,7 @@
             { label: "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1", color: "demand", width: 1.4, dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] },
             { label: "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2", color: "supply", width: 1.4, dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] },
             { label: "MRt = " + nice((a1 + a2) / (b1 + b2)) + " − " + nice(2 / (b1 + b2)) + "QTotal", color: "ink", fn: mrtInv, xRange: [0, (a1 + a2) / 2], n: 60 },
-            { label: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "QTotal" : ""), color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 }
+            { label: "MC = " + nice(c0) + (c1 > 0 : " + " + nice(c1) + "QTotal" : ""), color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 }
           ],
           points: [{ x: Qt, y: m, color: "ink", label: "QTotal = " + nice(Qt) + " ; MR = MC = " + nice(m) }],
           vlines: [{ x: Qt, color: "ink" }]
@@ -1691,11 +1691,11 @@
     el.innerHTML = "";
     (results || []).forEach(function (r) {
       var d = document.createElement("div");
-      d.className = "result" + (r.hero ? " hero-result" : "");
+      d.className = "result" + (r.hero : " hero-result" : "");
       d.innerHTML =
         '<span class="rlabel">' + (r.label || "") + "</span>" +
         '<span class="rvalue">' + (r.value || "") +
-        (r.sub ? '<small class="rsub">' + r.sub + "</small>" : "") + "</span>";
+        (r.sub : '<small class="rsub">' + r.sub + "</small>" : "") + "</span>";
       el.appendChild(d);
     });
   }
@@ -1708,11 +1708,11 @@
       var li = document.createElement("li");
       var html = "";
       /* kepala baris: nama langkah di kiri, hasil ringkas di kanan */
-      var tag = typeof st.result === "string" && st.result ? st.result : "";
+      var tag = typeof st.result === "string" && st.result : st.result : "";
       if (st.label || tag) {
         html += '<div class="st-head">' +
           '<span class="st-label">' + (st.label || "") + "</span>" +
-          (tag ? '<span class="st-tag">' + tag + "</span>" : "") +
+          (tag : '<span class="st-tag">' + tag + "</span>" : "") +
           "</div>";
       }
       /* baris rumus: mengalir berdampingan, baru turun baris kalau perlu */
@@ -1824,7 +1824,7 @@
         return;
       }
       var wrap = document.createElement("div");
-      wrap.className = "field" + (f.dep ? " dep" : "");
+      wrap.className = "field" + (f.dep : " dep" : "");
       wrap.id = "w-" + id + "-" + f.id;
 
       if (f.type === "check") {
@@ -1866,7 +1866,7 @@
         inp.setAttribute("inputmode", "decimal");
         inp.id = "f-" + id + "-" + f.id;
         inp.name = f.id;
-        inp.value = f.def === undefined ? "" : String(f.def);
+        inp.value = f.def === undefined : "" : String(f.def);
         if (f.placeholder) inp.placeholder = f.placeholder;
         wrap.appendChild(inp);
       }
@@ -1946,7 +1946,7 @@
       }
     } catch (e) {
       /* pertahankan hasil terakhir yang benar, hanya tampilkan peringatan */
-      showError(e && e.message ? e.message : String(e));
+      showError(e && e.message : e.message : String(e));
       if (force) {
         renderResults([]);
         renderSteps([]);
@@ -1968,11 +1968,11 @@
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.dataset.mode = key;
-      btn.setAttribute("aria-selected", key === active ? "true" : "false");
+      btn.setAttribute("aria-selected", key === active : "true" : "false");
       btn.textContent = ("0" + (i + 1)).slice(-2) + "  " + MODES[key].label;
       btn.addEventListener("click", function () {
         Array.prototype.forEach.call(tabs.querySelectorAll(".mode-tab"), function (b) {
-          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+          b.setAttribute("aria-selected", b === btn : "true" : "false");
         });
         clearOutput();
         hideError();
@@ -2008,7 +2008,7 @@
     var tabs = $("mode-tabs");
     if (!tabs || !MODES[mode]) return false;
     Array.prototype.forEach.call(tabs.querySelectorAll(".mode-tab"), function (b) {
-      b.setAttribute("aria-selected", b.dataset.mode === mode ? "true" : "false");
+      b.setAttribute("aria-selected", b.dataset.mode === mode : "true" : "false");
     });
     clearOutput();
     hideError();
@@ -2024,7 +2024,7 @@
   /* tombol "Coba di kalkulator" di halaman lain → pindah + isi + hitung */
   function wirePrefill() {
     document.addEventListener("click", function (ev) {
-      var btn = ev.target && ev.target.closest ? ev.target.closest("[data-calc]") : null;
+      var btn = ev.target && ev.target.closest : ev.target.closest("[data-calc]") : null;
       if (!btn) return;
       ev.preventDefault();
       var mode = btn.getAttribute("data-calc");
@@ -2032,7 +2032,7 @@
       if (!MODES[mode]) return;
       if (!$("mode-tabs")) {
         /* halaman non-kalkulator: pindah dulu sambil bawa parameter */
-        location.href = "kalkulator.html?mode=" + encodeURIComponent(mode) +
+        location.href = "kalkulator.html:mode=" + encodeURIComponent(mode) +
           "&values=" + encodeURIComponent(json);
         return;
       }
@@ -2050,7 +2050,7 @@
     if (!tabs) return; /* halaman tanpa kalkulator: cukup tombol prefill */
     var params;
     try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
-    var mode = params ? params.get("mode") : null;
+    var mode = params : params.get("mode") : null;
     if (!MODES[mode]) mode = Object.keys(MODES)[0];
     buildTabs(mode);
     buildForm(mode);
