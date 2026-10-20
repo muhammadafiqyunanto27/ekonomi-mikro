@@ -15,9 +15,9 @@
     });
   }
   function parseVal(v) {
-    if (typeof v === "number") return isFinite(v) : v : NaN;
-    var n = parseFloat(String(v === undefined || v === null : "" : v).replace(/\s/g, "").replace(",", "."));
-    return isFinite(n) : n : NaN;
+    if (typeof v === "number") return isFinite(v) ? v : NaN;
+    var n = parseFloat(String((v === undefined || v === null ? "" : v)).replace(/\s/g, "").replace(",", "."));
+    return isFinite(n) ? n : NaN;
   }
   function ok() {
     for (var i = 0; i < arguments.length; i++) {
