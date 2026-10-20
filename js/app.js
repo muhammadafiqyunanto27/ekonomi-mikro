@@ -138,7 +138,7 @@
           "Qd = Qs",
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
           nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P = " + nice(den) + "P",
-          { left: "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe) },
+          { left: "P* = " + nice(a - c) + " ÷ " + nice(den) + " = " + nice(Pe) },
           { left: "Q* = " + nice(a) + " − " + nice(b) + "×" + nice(Pe) + " = " + nice(Qe) }
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
