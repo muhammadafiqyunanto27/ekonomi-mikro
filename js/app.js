@@ -127,22 +127,22 @@
       steps.push({
         label: "Fungsi permintaan & penawaran yang dipakai",
         lines: [
-          { left: "Qd = a − bP", note: "a = " + nice(a) + " (intersep, kolom a) · b = " + nice(b) + " (kemiringan, kolom b)" },
-          { left: "Qs = c + dP", note: "c = " + nice(c) + " (intersep, kolom c) · d = " + nice(d) + " (kemiringan, kolom d)" }
+          "Qd = " + nice(a) + " − " + nice(b) + "P",
+          "Qs = " + nice(c) + " + " + nice(d) + "P"
         ],
-        why: "Empat angka ini kamu ketik di kolom kiri (a, b, c, d). Bentuknya linear: makin tinggi harga makin sedikit yang diminta (kemiringan −b) dan makin banyak yang ditawarkan (kemiringan +d). Kurva di grafik memakai persamaan ini persis — angkanya ikut berubah kalau kamu ganti input."
+        why: "Empat angka ini kamu ketik di kolom kiri (a = " + nice(a) + ", b = " + nice(b) + ", c = " + nice(c) + ", d = " + nice(d) + "). Bentuknya linear: makin tinggi harga makin sedikit yang diminta (kemiringan −b) dan makin banyak yang ditawarkan (kemiringan +d)."
       });
       steps.push({
         label: "Keseimbangan murni: Qd = Qs",
         lines: [
-          { left: "Qd = Qs", note: "syarat keseimbangan: jumlah diminta = jumlah ditawarkan" },
-          { left: nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P", note: "masukkan fungsi yang sudah diketahui" },
-          { left: nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P = " + nice(den) + "P", note: "P dikumpulkan di kanan, " + nice(a) + " − (" + nice(c) + ") = " + nice(a - c) },
-          { left: "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe), note: "bagi " + nice(a - c) + " dengan " + nice(den) + " → harga keseimbangan" },
-          { left: "Q* = " + nice(a) + " − " + nice(b) + "×" + nice(Pe) + " = " + nice(Qe), note: "substitusi P* ke Qd untuk kuantitasnya" }
+          "Qd = Qs",
+          nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
+          nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P = " + nice(den) + "P",
+          { left: "P* = " + nice(a - c) + " : " + nice(den) + " = " + nice(Pe) },
+          { left: "Q* = " + nice(a) + " − " + nice(b) + "×" + nice(Pe) + " = " + nice(Qe) }
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
-        why: "Keseimbangan ada di harga yang membuat jumlah diminta sama dengan jumlah ditawarkan, jadi kedua ruas disamakan. P dikeluarkan dari faktor (b + d), lalu P* disubstitusikan balik untuk mendapatkan Q*. Dua angka ini jadi patokan pembanding semua kebijakan di bawah."
+        why: "Samakan Qd = Qs, kumpulkan suku P, bagi untuk dapat P*, lalu substitusikan ke salah satu fungsi untuk dapat Q*."
       });
 
       if (hasFiscal) {
@@ -838,11 +838,9 @@
         {
           label: "Hitung surplus dengan integral di bawah kurva",
           lines: [
-            "CS = ∫₀^Q [Pd(q) − P] dq = (aQ − Q²/2)/b − P·Q",
-            "CS = " + nice(CS),
-            "PS = ∫₀^Q [P − Ps(q)] dq = P·Q − (Q²/2 − cQ)/d",
-            "PS = " + nice(PS),
-            "Total surplus = CS + PS = " + nice(CS + PS)
+            { left: "CS = ∫₀^Q [Pd(q) − P] dq", note: "(aQ − Q²/2)/b − P·Q = " + nice(CS) },
+            { left: "PS = ∫₀^Q [P − Ps(q)] dq", note: "P·Q − (Q²/2 − cQ)/d = " + nice(PS) },
+            { left: "Total surplus = CS + PS", note: nice(CS + PS) }
           ],
           result: "CS = " + nice(CS) + " · PS = " + nice(PS) + " · total = " + nice(CS + PS),
           why: "Surplus konsumen adalah luas di bawah kurva permintaan dan di atas harga P, dihitung lewat integral pada kuantitas yang terjadi. Surplus produsen adalah luas di atas kurva penawaran dan di bawah harga P. Keduanya memakai Q yang sama supaya total surplus mencerminkan kesejahteraan yang benar-benar tercipta pada harga itu."
@@ -1422,11 +1420,11 @@
       steps.push({
         label: "Hitung laba",
         lines: [
-          "TR = P × Q = " + nice(P) + " × " + nice(Q) + " = " + nice(TR),
-          "TC = " + nice(FC) + " + " + nice(p) + "(" + nice(Q) + ") + " + nice(q) + "(" + nice(Q * Q) + ") + " + nice(r) + "(" + nice(Q * Q * Q) + ") = " + nice(tc),
-          "AC = TC/Q = " + nice(ac),
-          "Laba = TR − TC = " + nice(profit),
-          "Cara kedua: laba = (P − AC) × Q = (" + nice(P) + " − " + nice(ac) + ") × " + nice(Q) + " = " + nice((P - ac) * Q)
+          { left: "TR = P×Q", note: nice(P) + " × " + nice(Q) + " = " + nice(TR) },
+          { left: "TC", note: nice(tc) },
+          { left: "AC = TC/Q", note: nice(ac) },
+          { left: "Laba = TR − TC", note: nice(profit) },
+          { left: "Laba = (P − AC)×Q", note: nice((P - ac) * Q) }
         ],
         result: "Laba = " + nice(profit),
         why: "TR dihitung dari harga kali kuantitas, TC dari fungsi biaya pada kuantitas yang sama, lalu laba adalah selisihnya. Cara kedua (P − AC) × Q memberi hasil yang sama dan menunjukkan laba per unit. Angka-angka ini memakai Q* dan P* dari langkah sebelumnya."
@@ -1554,27 +1552,25 @@
         {
           label: "Invers permintaan dan MR tiap pasar",
           lines: [
-            "Pasar 1: Q1 = " + nice(a1) + " − " + nice(b1) + "P1",
-            "→ P1 = (" + nice(a1) + " − Q1)/" + nice(b1) + " = " + nice(a1 / b1) + " − " + nice(1 / b1) + "Q1",
-            "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1 (kemiringan dua kali P1)",
-            "Pasar 2: Q2 = " + nice(a2) + " − " + nice(b2) + "P2",
-            "→ P2 = (" + nice(a2) + " − Q2)/" + nice(b2) + " = " + nice(a2 / b2) + " − " + nice(1 / b2) + "Q2",
-            "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2",
-            "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "Q" : " (konstan)")
+            { left: "Pasar 1: Q1 = " + nice(a1) + " − " + nice(b1) + "P1", note: "permintaan pasar 1" },
+            { left: "P1 = (" + nice(a1) + " − Q1)/" + nice(b1), note: "bentuk invers" },
+            { left: "MR1 = P1 − Q1/b1", note: "kemiringan 2x dari P1" },
+            { left: "Pasar 2: Q2 = " + nice(a2) + " − " + nice(b2) + "P2", note: "permintaan pasar 2" },
+            { left: "P2 = (" + nice(a2) + " − Q2)/" + nice(b2), note: "bentuk invers" },
+            { left: "MR2 = P2 − Q2/b2", note: "kemiringan 2x dari P2" },
+            { left: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "Q" : ""), note: "biaya marjinal total" }
           ],
           why: "Permintaan tiap pasar dibalik menjadi harga sebagai fungsi kuantitas, lalu diturunkan menjadi MR. Pada permintaan linear, MR punya intersep sama tetapi kemiringannya dua kali lebih curam. Angka a1, b1, a2, b2 berasal dari kolom input, sedangkan MC dari c0 dan c1."
         },
         {
           label: "Penjumlahan horizontal MR (MRt = MR1 + MR2)",
           lines: [
-            "Pada MR bersama = m, tiap pasar memilih kuantitas:",
-            "Q1 = (" + nice(a1) + " − " + nice(b1) + "m)/2",
-            "Q2 = (" + nice(a2) + " − " + nice(b2) + "m)/2",
-            "QTotal = (" + nice(a1 + a2) + " − " + nice(b1 + b2) + "m)/2",
-            "Dibalik: m = (" + nice(a1 + a2) + " − 2·QTotal)/" + nice(b1 + b2) + " → kurva MRt",
+            { left: "Q1 = (" + nice(a1) + " − " + nice(b1) + "m)/2", note: "dari MR1 = m" },
+            { left: "Q2 = (" + nice(a2) + " − " + nice(b2) + "m)/2", note: "dari MR2 = m" },
+            { left: "QTotal = (" + nice(a1 + a2) + " − " + nice(b1 + b2) + "m)/2", note: "penjumlahan horizontal" },
             c1 > 0
-              ? "Syarat m = MC: m = [" + nice(c0) + " + " + nice(c1) + "(" + nice((a1 + a2) / 2) + ")] : [1 + " + nice(c1) + "(" + nice((b1 + b2) / 2) + ")] = " + nice(m)
-              : "MC konstan → MR bersama = m = " + nice(m) + " (MR1 = MR2 = MC)"
+              ? { left: "m = MC(QTotal)", note: "MRt = MC → m = " + nice(m) }
+              : { left: "m = MC konstan", note: nice(m) }
           ],
           result: "MR bersama = " + nice(m),
           why: "Karena satu pabrik melayani dua pasar, MR tiap pasar dijumlahkan secara horizontal pada setiap tingkat MR yang sama. Hasilnya kurva MRt, dan keseimbangan tercapai saat MRt = MC. Angka m adalah tingkat MR bersama yang memenuhi syarat itu; bila MC konstan, m langsung sama dengan MC."
@@ -1582,12 +1578,12 @@
         {
           label: "Kuantitas dan harga di tiap pasar",
           lines: [
-            "Q1 = (" + nice(a1) + " − " + nice(b1) + " × " + nice(m) + ")/2 = " + nice(Q1),
-            "P1 = (a1 − Q1)/b1 = " + nice(P1),
-            "Q2 = (" + nice(a2) + " − " + nice(b2) + " × " + nice(m) + ")/2 = " + nice(Q2),
-            "P2 = (a2 − Q2)/b2 = " + nice(P2),
-            "QTotal = " + nice(Qt),
-            "Cek: MR1 = " + nice(a1 / b1 - (2 / b1) * Q1) + " ;  MR2 = " + nice(a2 / b2 - (2 / b2) * Q2) + " ;  MC = " + nice(c0 + c1 * Qt) + " → ketiganya sama"
+            { left: "Q1 = (" + nice(a1) + " − " + nice(b1) + "×" + nice(m) + ")/2", note: "dari MR1 = m" },
+            { left: "P1 = (a1 − Q1)/b1", note: nice(P1) },
+            { left: "Q2 = (" + nice(a2) + " − " + nice(b2) + "×" + nice(m) + ")/2", note: "dari MR2 = m" },
+            { left: "P2 = (a2 − Q2)/b2", note: nice(P2) },
+            { left: "QTotal = Q1 + Q2", note: nice(Qt) },
+            { left: "MR1 = MR2 = MC", note: "cek: " + nice(a1/b1 - 2/b1*Q1) + " ; " + nice(a2/b2 - 2/b2*Q2) + " ; " + nice(c0+c1*Qt) }
           ],
           result: "Q1 = " + nice(Q1) + " · P1 = " + nice(P1) + " · Q2 = " + nice(Q2) + " · P2 = " + nice(P2),
           why: "Setelah m diketahui, kuantitas tiap pasar dihitung dari MR masing-masing, lalu harganya dibaca dari kurva permintaan pasar itu. Pasar dengan permintaan lebih elastis akan mendapat harga lebih rendah. Baris cek memastikan MR1, MR2, dan MC di output total benar-benar sama."
@@ -1595,11 +1591,11 @@
         {
           label: "Elastisitas tiap pasar dan laba",
           lines: [
-            "E1 = (∂Q1/∂P1) × (P1/Q1) = (" + nice(-b1) + ")(" + nice(P1) + "/" + nice(Q1) + ") = " + nice(E1),
-            "E2 = (" + nice(-b2) + ")(" + nice(P2) + "/" + nice(Q2) + ") = " + nice(E2),
-            "TR = " + nice(TR1) + " + " + nice(TR2) + " = " + nice(TR),
-            "TC = " + nice(FC) + " + " + nice(c0) + "(" + nice(Qt) + ")" + (c1 > 0 ? " + ½(" + nice(c1) + ")(" + nice(Qt * Qt) + ")" : "") + " = " + nice(TC),
-            "Laba = TR − TC = " + nice(profit)
+            { left: "E1 = (∂Q1/∂P1)(P1/Q1) = −b1·P1/Q1", note: nice(E1) },
+            { left: "E2 = (∂Q2/∂P2)(P2/Q2) = −b2·P2/Q2", note: nice(E2) },
+            { left: "TR = TR1 + TR2", note: nice(TR1) + " + " + nice(TR2) + " = " + nice(TR) },
+            { left: "TC = FC + VC(QTotal)", note: nice(TC) },
+            { left: "Laba = TR − TC", note: nice(profit) }
           ],
           result: "Laba = " + nice(profit) + " · E1 = " + nice(E1) + " · E2 = " + nice(E2),
           why: "Elastisitas tiap pasar dihitung untuk menjelaskan mengapa harganya berbeda, lalu TR, TC, dan laba dijumlahkan dari kedua pasar. TC memakai biaya variabel dari total output, bukan per pasar, karena produksinya satu. Angka E yang lebih besar menunjukkan pasar yang lebih peka terhadap harga."
@@ -1723,12 +1719,12 @@
       if (st.lines && st.lines.length) {
         html += '<div class="st-lines">' + st.lines.map(function (ln) {
           if (ln && typeof ln === "object") {
-            var txt = ln.left || "";
-            if (ln.note) txt += "   · " + ln.note;
-            return '<span class="st-line">' + txt + "</span>";
+            var out = '<span class="st-line">' + (ln.left || "") + '</span>';
+            if (ln.note) out += '<span class="st-note">' + ln.note + '</span>';
+            return out;
           }
           return '<span class="st-line">' + ln + "</span>";
-        }).join("") + "</div>";
+        }).join(" ") + "</div>";
       }
       if (st.why) html += '<p class="st-why">' + st.why + "</p>";
       li.innerHTML = html;
