@@ -135,14 +135,14 @@
       steps.push({
         label: "Keseimbangan murni: Qd = Qs",
         lines: [
-          "Qd = Qs",
           nice(a) + " − " + nice(b) + "P = " + nice(c) + " + " + nice(d) + "P",
-          nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P = " + nice(den) + "P",
-          { left: "P* = " + nice(a - c) + " ÷ " + nice(den) + " = " + nice(Pe) },
-          { left: "Q* = " + nice(a) + " − " + nice(b) + "×" + nice(Pe) + " = " + nice(Qe) }
+          nice(a - c) + " = (" + nice(b) + " + " + nice(d) + ")P",
+          nice(a - c) + " = " + nice(den) + "P",
+          "P* = " + nice(a - c) + " ÷ " + nice(den) + " = " + nice(Pe)",
+          "Q* = " + nice(a) + " − " + nice(b) + " × " + nice(Pe) + " = " + nice(Qe)
         ],
         result: "P* = " + nice(Pe) + " · Q* = " + nice(Qe),
-        why: "Samakan Qd = Qs, kumpulkan suku P, bagi untuk dapat P*, lalu substitusikan ke salah satu fungsi untuk dapat Q*."
+        why: "Samakan Qd = Qs, pindahkan suku biar P di satu ruas, bagi untuk dapat P*, lalu substitusikan ke Qd untuk dapat Q*."
       });
 
       if (hasFiscal) {
