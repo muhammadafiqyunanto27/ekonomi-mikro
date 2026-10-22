@@ -14,7 +14,7 @@ try:
 except Exception:
     pass
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent / "dist"
 
 
 class Q(SimpleHTTPRequestHandler):

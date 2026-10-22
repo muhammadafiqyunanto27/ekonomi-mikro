@@ -8,7 +8,7 @@ import functools
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright
 
-ROOT = str(pathlib.Path(__file__).resolve().parent.parent)  # repo root
+ROOT = str(pathlib.Path(__file__).resolve().parent.parent / "dist")  # situs hasil build Astro
 PORT = 8809
 BASE = "http://127.0.0.1:%d" % PORT
 

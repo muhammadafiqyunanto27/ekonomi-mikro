@@ -49,6 +49,10 @@ npm run preview
 Hasil build ada di `dist/` dan tetap memakai URL `index.html`, `materi.html`,
 `rumus.html`, `kasus.html`, dan `kalkulator.html`.
 
+Tes E2E opsional ada di `scripts/` dan membaca hasil build di `dist/`. Jalankan
+`npm run build` lebih dulu, lalu misalnya `python scripts/test_site.py`
+(membutuhkan Playwright untuk Python).
+
 ## Deploy
 
 Push ke branch `main` di GitHub. Vercel membangun proyek dengan `npm run build`

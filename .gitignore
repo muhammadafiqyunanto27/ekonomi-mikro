@@ -20,9 +20,3 @@ __pycache__/
 
 # Screenshot hasil tes lokal
 scripts/shot-*.png
-
-# Berkas bantu lokal (bukan bagian situs)
-/fix*.js
-/fix*.py
-/js/app_good.js
-/scripts/check_lines.js

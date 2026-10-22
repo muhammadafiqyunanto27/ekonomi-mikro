@@ -7,7 +7,9 @@ import functools
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright
 
-ROOT = str(pathlib.Path(__file__).resolve().parent.parent)  # repo root
+REPO = pathlib.Path(__file__).resolve().parent.parent
+ROOT = str(REPO / "dist")  # situs hasil build Astro
+SHOTS = pathlib.Path(__file__).resolve().parent
 PORT = 8791
 BASE = "http://127.0.0.1:%d" % PORT
 
@@ -155,18 +157,18 @@ def main():
 
         # ---------- 8. screenshot ----------
         page.goto(BASE + "/index.html")
-        page.screenshot(path=ROOT + "/scripts/shot-beranda.png", full_page=False)
+        page.screenshot(path=str(SHOTS / "shot-beranda.png"), full_page=False)
         page.goto(BASE + "/kalkulator.html")
         page.wait_for_timeout(400)
-        page.screenshot(path=ROOT + "/scripts/shot-kalkulator.png", full_page=True)
+        page.screenshot(path=str(SHOTS / "shot-kalkulator.png"), full_page=True)
         page.goto(BASE + "/materi.html")
-        page.screenshot(path=ROOT + "/scripts/shot-materi.png", full_page=False)
+        page.screenshot(path=str(SHOTS / "shot-materi.png"), full_page=False)
 
         mob = browser.new_context(viewport={"width": 390, "height": 844})
         mp = mob.new_page()
         mp.goto(BASE + "/kalkulator.html")
         mp.wait_for_timeout(400)
-        mp.screenshot(path=ROOT + "/scripts/shot-mobile.png", full_page=False)
+        mp.screenshot(path=str(SHOTS / "shot-mobile.png"), full_page=False)
         mob.close()
 
         browser.close()

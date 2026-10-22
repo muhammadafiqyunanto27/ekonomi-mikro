@@ -7,7 +7,7 @@ import functools
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent / "dist"
 PORT = 8806
 BASE = "http://127.0.0.1:%d" % PORT
 PAGES = ["index.html", "materi.html", "rumus.html", "kasus.html", "kalkulator.html"]
@@ -51,7 +51,7 @@ with sync_playwright() as p:
                 const h = a.getAttribute('href');
                 if (/^(https?:|mailto:|#|data:)/.test(h)) return;
                 const file = h.split('?')[0].split('#')[0];
-                if (file && !['index.html','materi.html','rumus.html','kasus.html','kalkulator.html','styles.css'].includes(file)) {
+                if (file && !['index.html','materi.html','rumus.html','kasus.html','kalkulator.html'].includes(file)) {
                     bad.push(h);
                 }
             });
@@ -63,7 +63,7 @@ with sync_playwright() as p:
     html = "".join((ROOT / n).read_text(encoding="utf-8") for n in PAGES)
     refs = set(re.findall(r'(?:href|src)="([^"#?:]+\.(?:css|js))"', html))
     for ref in sorted(refs):
-        check((ROOT / ref).exists(), "aset ada: %s" % ref)
+        check((ROOT / ref.lstrip("/")).exists(), "aset ada: %s" % ref)
 
     browser.close()
 
