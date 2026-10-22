@@ -1,3 +1,16 @@
+# Node & Astro
+node_modules/
+dist/
+.astro/
+.vercel/
+
+# Materi kuliah — sumber asli, tidak ikut di-push
+/*.doc
+/*.docx
+/*.ppt
+/*.pptx
+/*.rtf
+
 # Python cache
 __pycache__/
 *.pyc
@@ -7,3 +20,9 @@ __pycache__/
 
 # Screenshot hasil tes lokal
 scripts/shot-*.png
+
+# Berkas bantu lokal (bukan bagian situs)
+/fix*.js
+/fix*.py
+/js/app_good.js
+/scripts/check_lines.js

@@ -228,21 +228,37 @@
     });
     out.push("</g>");
 
-    /* sumbu + label tick */
-    out.push('<line x1="' + m.l + '" y1="' + (m.t + ph) + '" x2="' + (m.l + pw) + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
-    out.push('<line x1="' + m.l + '" y1="' + m.t + '" x2="' + m.l + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+    /* sumbu — berpotongan di 0 bila domain memuat nilai negatif,
+       supaya kurva bisa diteruskan ke daerah Q/P di bawah nol */
+    var EPS = 1e-9;
+    var xAxisInside = yd[0] < -EPS && yd[1] > EPS;
+    var yAxisInside = xd[0] < -EPS && xd[1] > EPS;
+    var xAxisY = xAxisInside ? sy(0) : m.t + ph;
+    var yAxisX = yAxisInside ? sx(0) : m.l;
+
+    out.push('<line x1="' + m.l + '" y1="' + xAxisY.toFixed(1) + '" x2="' + (m.l + pw) + '" y2="' + xAxisY.toFixed(1) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+    out.push('<line x1="' + yAxisX.toFixed(1) + '" y1="' + m.t + '" x2="' + yAxisX.toFixed(1) + '" y2="' + (m.t + ph) + '" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+
+    /* panah kecil di ujung sumbu */
+    out.push('<path d="M' + (m.l + pw - 7) + ' ' + (xAxisY - 4).toFixed(1) + ' L' + (m.l + pw) + ' ' + xAxisY.toFixed(1) +
+      ' L' + (m.l + pw - 7) + ' ' + (xAxisY + 4).toFixed(1) + '" fill="none" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+    out.push('<path d="M' + (yAxisX - 4).toFixed(1) + ' ' + (m.t + 7) + ' L' + yAxisX.toFixed(1) + ' ' + m.t +
+      ' L' + (yAxisX + 4).toFixed(1) + ' ' + (m.t + 7) + '" fill="none" stroke="' + cssVar("--ink", "#17140f") + '" stroke-width="1.5"/>');
+
     xt.forEach(function (v) {
       var X = sx(v);
       if (!isFinite(X) || X < m.l - 1 || X > m.l + pw + 1) return;
-      out.push('<line x1="' + X.toFixed(1) + '" y1="' + (m.t + ph) + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph + 4) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
-      out.push('<text x="' + X.toFixed(1) + '" y="' + (m.t + ph + 17) + '" font-family="' + MONO +
+      out.push('<line x1="' + X.toFixed(1) + '" y1="' + (xAxisY - 3).toFixed(1) + '" x2="' + X.toFixed(1) + '" y2="' + (xAxisY + 4).toFixed(1) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
+      out.push('<text x="' + X.toFixed(1) + '" y="' + (xAxisY + 17).toFixed(1) + '" font-family="' + MONO +
         '" font-size="10.5" fill="' + cssVar("--ink-2", "#55504a") + '" text-anchor="middle">' + esc(fmt(v)) + "</text>");
     });
     yt.forEach(function (v) {
       var Y = sy(v);
       if (!isFinite(Y) || Y < m.t - 1 || Y > m.t + ph + 1) return;
-      out.push('<line x1="' + (m.l - 4) + '" y1="' + Y.toFixed(1) + '" x2="' + m.l + '" y2="' + Y.toFixed(1) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
-      out.push('<text x="' + (m.l - 7) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
+      /* angka 0 cukup sekali: ikut label sumbu-x bila 0 ada di domain-x */
+      if (Math.abs(v) < EPS && xd[0] <= 0 && xd[1] >= 0) return;
+      out.push('<line x1="' + (yAxisX - 4).toFixed(1) + '" y1="' + Y.toFixed(1) + '" x2="' + (yAxisX + 1).toFixed(1) + '" y2="' + Y.toFixed(1) + '" stroke="' + cssVar("--ink", "#17140f") + '"/>');
+      out.push('<text x="' + (yAxisX - 7).toFixed(1) + '" y="' + (Y + 3.5).toFixed(1) + '" font-family="' + MONO +
         '" font-size="10.5" fill="' + cssVar("--ink-2", "#55504a") + '" text-anchor="end">' + esc(fmt(v)) + "</text>");
     });
     if (yd2) {
@@ -255,11 +271,11 @@
     }
 
     /* label sumbu */
-    out.push('<text x="' + (m.l + pw) + '" y="' + (m.t + ph + 38) + '" font-family="' + MONO +
+    var xLabY = xAxisInside ? xAxisY + 34 : m.t + ph + 38;
+    out.push('<text x="' + (m.l + pw) + '" y="' + xLabY.toFixed(1) + '" font-family="' + MONO +
       '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '" text-anchor="end">' + esc(spec.xLabel || "Kuantitas (Q)") + "</text>");
-    out.push('<text x="' + (m.l - 54) + '" y="' + (m.t + ph + 38) + '" font-family="' + MONO +
-      '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '">0</text>');
-    out.push('<text transform="translate(' + (m.l - 48) + ',' + m.t + ') rotate(-90)" font-family="' + MONO +
+    var yLabX = yAxisInside ? Math.max(m.l + 6, yAxisX - 38) : m.l - 48;
+    out.push('<text transform="translate(' + yLabX + ',' + m.t + ') rotate(-90)" font-family="' + MONO +
       '" font-size="11.5" fill="' + cssVar("--ink", "#17140f") + '" text-anchor="end">' + esc(spec.yLabel || "Harga (P)") + "</text>");
     if (yd2) {
       out.push('<text transform="translate(' + (m.l + pw + 56) + ',' + m.t + ') rotate(-90)" font-family="' + MONO +
@@ -277,13 +293,15 @@
           '" font-size="10.5" fill="' + col(l.color || "blue") + '">' + esc(l.label) + "</text>");
       }
     });
-    (spec.vlines || []).forEach(function (l) {
+    (spec.vlines || []).forEach(function (l, li) {
       var X = sx(l.x);
       if (!isFinite(X) || X < m.l - 2 || X > m.l + pw + 2) return;
       out.push('<line x1="' + X.toFixed(1) + '" y1="' + m.t + '" x2="' + X.toFixed(1) + '" y2="' + (m.t + ph) +
         '" stroke="' + col(l.color || "ink") + '" stroke-width="1.2" stroke-dasharray="' + (l.dash === false ? "0" : "5 4") + '"/>');
       if (l.label) {
-        out.push('<text x="' + (X + 5).toFixed(1) + '" y="' + (m.t + 12) + '" font-family="' + MONO +
+        /* label digeser bertingkat supaya garis Q*, Q′, Qd, Qs tidak saling menimpa */
+        var ly = m.t + 12 + (li % 5) * 13;
+        out.push('<text x="' + (X + 5).toFixed(1) + '" y="' + ly + '" font-family="' + MONO +
           '" font-size="10.5" fill="' + col(l.color || "ink") + '">' + esc(l.label) + "</text>");
       }
     });

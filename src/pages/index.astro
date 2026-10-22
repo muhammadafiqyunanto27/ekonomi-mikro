@@ -1,0 +1,112 @@
+---
+import Base from "../layouts/Base.astro";
+
+const title = "Ekonomi Mikro — Materi Lengkap, Rumus, Kasus & Kalkulator";
+const description = "Catatan lengkap Ekonomi Mikro (Pengantar Ilmu Ekonomi I): penjelasan per bab, rumus, kasus nyata, kalkulator keseimbangan pasar, elastisitas, surplus, utilitas, produksi, biaya, laba dan diskriminasi harga lengkap dengan grafik.";
+---
+
+<Base title={title} description={description} active="beranda">
+<main id="top">
+<!-- ============================================================= HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">Pengantar Ilmu Ekonomi I · Catatan kuliah + kalkulator</p>
+      <h1>Ekonomi Mikro, dari teori sampai angkanya.</h1>
+      <p class="lede">Seluruh catatan kuliah — permintaan, penawaran, keseimbangan, elastisitas, konsumen, produksi, biaya, struktur pasar — lengkap dengan rumus, kasus nyata, kalkulator langkah-demi-langkah, dan kurva yang menggambar ulang mengikuti angkamu.</p>
+      <div class="hero-actions">
+        <a class="btn" href="materi.html">Mulai belajar</a>
+        <a class="btn btn-ghost" href="kalkulator.html">Buka kalkulator</a>
+      </div>
+    </div>
+    <div class="hero-side">
+      <p class="eyebrow" style="margin-bottom:var(--space-2xs)">Isi halaman ini</p>
+      <dl>
+        <div class="row"><dt>Materi</dt><dd>7 bab</dd></div>
+        <div class="row"><dt>Rumus</dt><dd>32 entri</dd></div>
+        <div class="row"><dt>Kasus nyata</dt><dd>8 studi kasus</dd></div>
+        <div class="row"><dt>Mode kalkulator</dt><dd>8 mode</dd></div>
+        <div class="row"><dt>Grafik</dt><dd>SVG, offline</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="num">7</span><span class="lbl">bab materi lengkap</span></div>
+  <div class="stat"><span class="num">8</span><span class="lbl">mode kalkulator</span></div>
+  <div class="stat"><span class="num">32</span><span class="lbl">rumus siap pakai</span></div>
+  <div class="stat"><span class="num">100%</span><span class="lbl">jalan tanpa internet</span></div>
+</div>
+
+
+<section class="section" id="akses">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Navigasi</p>
+      <h2>Isi situs ini</h2>
+      <p class="desc">Empat bagian utama — dibaca berurutan dari materi ke kalkulator, atau langsung menuju yang kamu butuhkan.</p>
+    </div>
+    <div class="quick-grid">
+      <a class="quick" href="materi.html">
+        <span class="qtag">01 &middot; Bab 1&ndash;7</span>
+        <h3>Materi</h3>
+        <p>Perkembangan ilmu ekonomi, mekanisme pasar, kebijakan &amp; kegagalan pasar, elastisitas, perilaku konsumen, produksi &amp; biaya, sampai struktur pasar.</p>
+      </a>
+      <a class="quick" href="rumus.html">
+        <span class="qtag">02 &middot; Kelompok A&ndash;H</span>
+        <h3>Rumus</h3>
+        <p>Seluruh rumus penting dikelompokkan lengkap dengan penjelasan singkat dan tombol langsung menghitungnya di kalkulator.</p>
+      </a>
+      <a class="quick" href="kasus.html">
+        <span class="qtag">03 &middot; 8 studi kasus</span>
+        <h3>Kasus Nyata</h3>
+        <p>Kasus berangka lengkap dengan data, langkah penyelesaian, dan kesimpulan — dari harga mobil sampai diskriminasi harga bioskop.</p>
+      </a>
+      <a class="quick" href="kalkulator.html">
+        <span class="qtag">04 &middot; 8 mode</span>
+        <h3>Kalkulator</h3>
+        <p>Keseimbangan &amp; kebijakan, elastisitas, surplus, utilitas, produksi, biaya, laba maksimum, diskriminasi harga — semua dengan langkah &amp; grafik.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cara-pakai">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Panduan singkat</p>
+      <h2>Cara memakai situs ini</h2>
+      <p class="desc">Situs ini dirancang untuk dibaca berurutan saat belajar, tapi tetap enak dibuka acak saat butuh cepat. Empat langkah di bawah adalah alur paling efektif.</p>
+    </div>
+    <div class="howto">
+      <div class="how"><div>
+        <h4>Baca materi per bab</h4>
+        <p>Halaman <a href="materi.html">Materi</a> memuat 7 bab dari pengantar sampai struktur pasar. Setiap bab memuat definisi (teks penjelas), rumus di kotak bergaris hijau, contoh hitung langkah demi langkah, dan tabel perbandingan. Di komputer daftar isi menempel di kiri layar; di HP buka &ldquo;Daftar isi materi&rdquo; lalu pilih bab.</p>
+      </div></div>
+      <div class="how"><div>
+        <h4>Catat rumus dari halaman Rumus</h4>
+        <p>Halaman <a href="rumus.html">Rumus</a> mengumpulkan seluruh rumus penting dalam kelompok A&ndash;H mengikuti urutan bab, lengkap dengan tabel daftar simbol. Setiap baris punya tombol <span class="mono">pakai</span> yang langsung membawa angka contoh ke kalkulator.</p>
+      </div></div>
+      <div class="how"><div>
+        <h4>Kerjakan kasus nyata</h4>
+        <p>Halaman <a href="kasus.html">Kasus Nyata</a> memuat 8 soal berangka lengkap dengan data, langkah penyelesaian, dan kesimpulan &mdash; dari harga mobil sampai diskriminasi harga bioskop. Tombol &ldquo;Hitung di kalkulator&rdquo; mengisi angka kasus itu ke kalkulator.</p>
+      </div></div>
+      <div class="how"><div>
+        <h4>Mainkan angkanya di kalkulator</h4>
+        <p>Di halaman <a href="kalkulator.html">Kalkulator</a>, ubah angka sesuai soalmu: hasil, langkah penyelesaian, dan grafik digambar ulang otomatis mengikuti angka terbaru. Lihat <a href="kalkulator.html#cara-kalkulator">tutorial kalkulator</a> untuk penjelasan tiap mode.</p>
+      </div></div>
+    </div>
+    <aside class="guide" aria-label="Fitur situs" style="margin-top:var(--space-l)">
+      <p class="g-title">Fitur yang mudah terlewat</p>
+      <ul>
+        <li><strong>Mode gelap / terang</strong> &mdash; tombol di ujung kanan menu atas mengganti tema seluruh situs, termasuk warna grafik. Pilihanmu diingat di peramban ini.</li>
+        <li><strong>Tombol &ldquo;pakai&rdquo; dan &ldquo;Hitung di kalkulator&rdquo;</strong> &mdash; tombol ini memindahkanmu ke kalkulator dengan angka contoh sudah terisi; tinggal ganti dengan angka soalmu.</li>
+        <li><strong>Semua bisa offline</strong> &mdash; buka <span class="mono">index.html</span> langsung dari folder; grafik digambar sebagai SVG lokal, tanpa font atau pustaka dari internet.</li>
+        <li><strong>Angka desimal</strong> &mdash; saat mengetik di kalkulator gunakan titik (<span class="mono">1.25</span>); hasil ditulis dengan gaya Indonesia (koma desimal, titik ribuan).</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+</main>
+</Base>

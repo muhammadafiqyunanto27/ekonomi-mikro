@@ -756,64 +756,90 @@ table.t tbody tr:hover { background: var(--tint); }
 .steps li {
   counter-increment: step;
   display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  gap: var(--space-2xs);
-  padding: var(--space-2xs) 0;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  column-gap: var(--space-xs);
+  align-items: start;
+  padding: var(--space-s) 0;
   border-bottom: 1px dotted var(--line-2);
 }
 .steps li::before {
   content: counter(step);
+  grid-column: 1;
+  grid-row: 1;
   font-family: var(--font-mono);
+  font-size: var(--step--1);
   color: var(--accent);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.2em;
+}
+/* seluruh isi langkah satu wadah: judul, rumus, penjelasan */
+.steps .st-body {
+  grid-column: 2;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3xs);
 }
 .steps .st-head {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2xs);
+  gap: var(--space-3xs) var(--space-s);
 }
-.steps .st-label { font-size: var(--step--1); color: var(--ink-2); }
+.steps .st-label {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
 .steps .st-tag {
   font-family: var(--font-mono);
   font-size: var(--step--1);
   color: var(--accent);
   font-weight: 700;
   white-space: nowrap;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
 }
-/* baris rumus: dua lajur — kiri penurunan, kanan pengganti angka / penjelasan singkat */
-.steps .st-lines { margin: var(--space-3xs) 0; }
-.steps .st-row {
+/* rumus: satu persamaan = satu baris horizontal, membungkus wajar saat sempit */
+.steps .st-lines {
+  display: grid;
+  gap: 0.15rem;
+  margin: var(--space-3xs) 0 var(--space-2xs);
+  min-width: 0;
+}
+.steps .st-eq {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-2xs) var(--space-s);
-  flex-wrap: nowrap;
+  gap: 0 var(--space-s);
+  min-width: 0;
 }
 .steps .st-line {
   font-family: var(--font-mono);
   font-size: var(--step-0);
   color: var(--ink);
-  white-space: pre-wrap;
+  line-height: 1.7;
+  white-space: normal;
   overflow-wrap: break-word;
-  line-height: 1.65;
-  max-width: 100%;
+  word-break: normal;
+  font-variant-numeric: tabular-nums;
   min-width: 0;
 }
 .steps .st-note {
   color: var(--ink-3);
   font-size: var(--step--1);
-  line-height: 1.5;
-  flex: 0 0 auto;
+  line-height: 1.55;
   white-space: normal;
-  max-width: 38%;
-  text-align: right;
-  padding-left: var(--space-2xs);
+  flex: 0 1 auto;
+  min-width: 0;
 }
 /* penjelasan: diapain, kenapa, dari mana angkanya */
 .steps .st-why {
   font-size: var(--step--1);
   color: var(--ink-2);
-  margin: 0 0 var(--space-3xs);
+  margin: var(--space-3xs) 0 0;
   max-width: var(--measure);
 }
 
@@ -822,7 +848,7 @@ table.t tbody tr:hover { background: var(--tint); }
 
 /* ---------------------------------------------------------- grafik */
 .charts { display: grid; gap: var(--space-m); }
-.chart-card { border: var(--border-2); background: var(--surface); padding: var(--space-2xs); }
+.chart-card { border: var(--border-2); background: var(--surface); padding: var(--space-2xs); margin: 0; }
 .chart-card figcaption {
   font-family: var(--font-mono);
   font-size: var(--step--1);
@@ -846,6 +872,12 @@ table.t tbody tr:hover { background: var(--tint); }
 }
 .chart-legend .lg { display: inline-flex; align-items: center; gap: var(--space-3xs); }
 .chart-legend .sw { width: 1.1rem; height: 0.35rem; display: inline-block; }
+
+/* di layar sempit grafik digeser mendatar, bukan dikecilkan sampai tak terbaca */
+@media (max-width: 700px) {
+  .chart-card { overflow-x: auto; }
+  .chart-card svg { min-width: 560px; }
+}
 .chart-empty {
   font-family: var(--font-mono);
   font-size: var(--step--1);
@@ -1008,6 +1040,27 @@ html[data-theme="dark"] .theme-btn .ic-moon { display: none; }
 .guide li { margin-bottom: var(--space-3xs); }
 .guide li:last-child { margin-bottom: 0; }
 .guide strong { color: var(--ink); }
+
+/* contoh cepat dari catatan kuliah */
+.calc-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  border-left: 3px solid var(--accent);
+  background: var(--tint);
+  padding: var(--space-s) var(--space-m);
+  margin: 0 0 var(--space-m);
+}
+.calc-example p {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+.calc-example strong { color: var(--ink); }
+.calc-example .btn { flex: 0 0 auto; }
 
 /* langkah bernomor — "cara pakai" */
 .howto { counter-reset: howto; }

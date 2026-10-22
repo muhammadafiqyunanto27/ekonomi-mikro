@@ -1,0 +1,130 @@
+---
+import Base from "../layouts/Base.astro";
+
+const title = "Rumus Ekonomi Mikro — Kumpulan Rumus";
+const description = "Kumpulan rumus Ekonomi Mikro: permintaan penawaran, keseimbangan, elastisitas, surplus, utilitas, produksi, biaya, laba dan diskriminasi harga lengkap dengan rumus pendukung.";
+---
+
+<Base title={title} description={description} active="rumus">
+<main id="top">
+<div class="container"><p class="page-crumb"><a href="index.html">Beranda</a> / <b>Rumus</b></p></div>
+<!-- ============================================================ RUMUS -->
+<section class="section" id="rumus">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Bagian 2</p>
+      <h2>Lembar Rumus</h2>
+      <p class="desc">Semua rumus yang dipakai di catatan ini, dikelompokkan per topik. Tombol di kanan mengirim angka contoh langsung ke mode kalkulator yang sesuai.</p>
+    </div>
+
+    <aside class="guide" aria-label="Petunjuk lembar rumus">
+      <p class="g-title">Cara memakai lembar rumus ini</p>
+      <ul>
+        <li>Rumus dikelompokkan A&ndash;H mengikuti urutan bab di materi &mdash; cari nama rumus di kolom kiri, rumusnya di kolom tengah.</li>
+        <li>Tombol <span class="mono">pakai</span> di kolom kanan membuka kalkulator dengan mode dan angka contoh sudah terisi &mdash; ganti angkanya dengan angka soalmu.</li>
+        <li>Simbol dipakai konsisten di seluruh situs; daftar lengkapnya di tabel bawah.</li>
+        <li>Saat mengetik angka di kalkulator gunakan titik sebagai desimal (<span class="mono">0.75</span>); hasil ditulis gaya Indonesia (koma desimal).</li>
+      </ul>
+    </aside>
+
+    <div class="table-wrap" style="margin-bottom:var(--space-xl)">
+      <table class="t">
+        <caption>Daftar simbol yang dipakai di seluruh halaman</caption>
+        <thead>
+          <tr><th>Simbol</th><th>Arti</th><th>Simbol</th><th>Arti</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="n">P</td><td>Harga</td><td class="n">Q</td><td>Kuantitas (jumlah barang)</td></tr>
+          <tr><td class="n">Qd, Qs</td><td>Kuantitas diminta &amp; kuantitas ditawarkan</td><td class="n">a, b, c, d</td><td>Koefisien fungsi linear: Qd = a &minus; bP, Qs = c + dP</td></tr>
+          <tr><td class="n">P*, Q*</td><td>Harga &amp; kuantitas keseimbangan</td><td class="n">t / s</td><td>Pajak / subsidi per unit</td></tr>
+          <tr><td class="n">Pb, Ps</td><td>Harga dibayar pembeli / harga diterima penjual</td><td class="n">CS / PS</td><td>Surplus konsumen / surplus produsen</td></tr>
+          <tr><td class="n">Ep, Es</td><td>Elastisitas harga permintaan / penawaran</td><td class="n">TR / TC</td><td>Total pendapatan / total biaya</td></tr>
+          <tr><td class="n">MC, AC, AFC, AVC</td><td>Biaya marginal, rata-rata, tetap rata-rata, variabel rata-rata</td><td class="n">TP, AP, MP</td><td>Produksi total, rata-rata, marginal</td></tr>
+          <tr><td class="n">MUx, MRSxy</td><td>Utilitas marginal barang X; laju substitusi marginal X untuk Y</td><td class="n">&pi;</td><td>Laba (TR &minus; TC)</td></tr>
+          <tr><td class="n">&lambda;</td><td>Nilai guna marginal uang (utilitas per rupiah)</td><td class="n">MR</td><td>Penerimaan marginal (tambahan pendapatan per unit)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula-groups">
+
+      <div class="fgroup">
+        <h3>A · Permintaan &amp; Penawaran</h3>
+        <div class="frow"><span class="fname">Fungsi permintaan (linear)</span><span class="feq">Qd = a − bP</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"a":100,"b":10,"c":0,"d":1}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Fungsi penawaran (linear)</span><span class="feq">Qs = c + dP  (c biasa negatif)</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"a":200,"b":10,"c":-40,"d":5}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Hukum permintaan (gerak sepanjang kurva)</span><span class="feq">P ↑ → Qd ↓ ; P ↓ → Qd ↑ (ceteris paribus)</span></div>
+        <div class="frow"><span class="fname">Hukum penawaran (gerak sepanjang kurva)</span><span class="feq">P ↑ → Qs ↑ ; P ↓ → Qs ↓ (ceteris paribus)</span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>B · Keseimbangan Pasar &amp; Kebijakan</h3>
+        <div class="frow"><span class="fname">Harga keseimbangan</span><span class="feq">P* = (a − c) / (b + d)</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"a":200,"b":10,"c":-40,"d":5}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Kuantitas keseimbangan</span><span class="feq">Q* = a − bP* = c + dP*</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"a":200,"b":10,"c":-40,"d":5}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Excess demand / excess supply</span><span class="feq">ExD = Qd − Qs ; ExS = Qs − Qd (pada harga kebijakan)</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"policy":"floor","Pmin":600}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Pajak per unit (t)</span><span class="feq">Pb = Ps + t ; Qd(Pb) = Qs(Ps)</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"policy":"pajak","t":1.25}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Pajak proporsional (k %)</span><span class="feq">Pb = Ps (1 + k)</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"policy":"pajakprosen","k":20}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Subsidi per unit (s)</span><span class="feq">Pb = Ps − s ; biaya = s × Q</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"policy":"subsidi","s":1.25}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Kuota produksi</span><span class="feq">Pb = (a − Q̄)/b ; Ps = (Q̄ − c)/d ; selisih = Pb − Ps</span><span class="go"><button class="btn btn-line" type="button" data-calc="keseimbangan" data-values='{"policy":"kuota","Qbar":10000}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Penerimaan pajak / biaya subsidi</span><span class="feq">Pajak = t × Q ; Subsidi = s × Q</span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>C · Surplus Ekonomi</h3>
+        <div class="frow"><span class="fname">Surplus konsumen (linear)</span><span class="feq">CS = ½ × (Pchoke − P) × Q ;  Pchoke = a/b</span><span class="go"><button class="btn btn-line" type="button" data-calc="surplus" data-values='{"a":200,"b":10,"c":-40,"d":5}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Surplus produsen (linear)</span><span class="feq">PS = ½ × (P − Ps0) × Q ;  Ps0 = −c/d (harga saat Qs = 0)</span><span class="go"><button class="btn btn-line" type="button" data-calc="surplus" data-values='{"a":200,"b":10,"c":-40,"d":5}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Deadweight loss kebijakan</span><span class="feq">DWL = ½ × (Pb − Ps) × (Q* − Q)</span><span class="go"><button class="btn btn-line" type="button" data-calc="surplus" data-values='{"Pmode":"custom","Pcustom":12}'>pakai</button></span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>D · Elastisitas</h3>
+        <div class="frow"><span class="fname">Elastisitas harga — titik</span><span class="feq">Ep = (∂Q/∂P) × (P/Q) ; linear: Ep = b × P/Q</span><span class="go"><button class="btn btn-line" type="button" data-calc="elastisitas" data-values='{"sub":"titik"}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Elastisitas harga — busur (midpoint)</span><span class="feq">Ep = [ΔQ / (Q̄)] ÷ [ΔP / (P̄)]</span><span class="go"><button class="btn btn-line" type="button" data-calc="elastisitas" data-values='{"sub":"busur"}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Elastisitas silang</span><span class="feq">Exy = (∂Qx/∂Py) × (Py/Qx) ; + substitusi, − komplementer</span><span class="go"><button class="btn btn-line" type="button" data-calc="elastisitas" data-values='{"sub":"silang"}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Elastisitas pendapatan</span><span class="feq">EI = (∂Q/∂I) × (I/Q) ; &gt;0 normal, &lt;0 inferior</span><span class="go"><button class="btn btn-line" type="button" data-calc="elastisitas" data-values='{"sub":"pendapatan"}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Elastisitas penawaran</span><span class="feq">Es = (∂Qs/∂P) × (P/Qs) — bernotasi positif</span><span class="go"><button class="btn btn-line" type="button" data-calc="elastisitas" data-values='{"sub":"penawaran"}'>pakai</button></span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>E · Perilaku Konsumen</h3>
+        <div class="frow"><span class="fname">Budget line</span><span class="feq">Px·Qx + Py·Qy = M ; kemiringan = −Px/Py</span></div>
+        <div class="frow"><span class="fname">Utility total &amp; marjinal</span><span class="feq">TU = Σ MU ;  MU = ∂TU/∂Q</span></div>
+        <div class="frow"><span class="fname">Keseimbangan konsumen (kardinal)</span><span class="feq">MUx/Px = MUy/Py = λ , dengan Px·Qx + Py·Qy = M</span><span class="go"><button class="btn btn-line" type="button" data-calc="utilitas" data-values=''>pakai</button></span></div>
+        <div class="frow"><span class="fname">Keseimbangan konsumen (ordinal)</span><span class="feq">MRSxy = MUx/MUy = Px/Py (sentuh kurva indiferen)</span></div>
+        <div class="frow"><span class="fname">Syarat kepuasan maksimum</span><span class="feq">MUx = Px (satu barang) — MU/P = 1 untuk unit terakhir</span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>F · Produksi</h3>
+        <div class="frow"><span class="fname">Produk total, marjinal, rata-rata</span><span class="feq">TP = Q = f(K,L) ; MP = ∂TP/∂L ; AP = TP/L</span><span class="go"><button class="btn btn-line" type="button" data-calc="produksi" data-values='{"a":20,"b":8,"c":1}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Titik penting kurva produksi</span><span class="feq">TP maks saat MP = 0 ; AP maks saat MP = AP</span></div>
+        <div class="frow"><span class="fname">Marginal Rate of Technical Substitution</span><span class="feq">MRTS = −dK/dL = MPL/MPK ; MRTS menurun sepanjang isokuan</span></div>
+        <div class="frow"><span class="fname">Isokost</span><span class="feq">I = r·K + w·L ; kemiringan = −w/r</span></div>
+        <div class="frow"><span class="fname">Keseimbangan produsen</span><span class="feq">MRTS = w/r (isokuan bersinggungan isokost)</span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>G · Biaya Produksi</h3>
+        <div class="frow"><span class="fname">Biaya total</span><span class="feq">TC = FC + TVC</span><span class="go"><button class="btn btn-line" type="button" data-calc="biaya" data-values='{"FC":50,"p":12,"q":-1.2,"r":0.08}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Biaya rata-rata</span><span class="feq">AC = TC/Q = AFC + AVC</span><span class="go"><button class="btn btn-line" type="button" data-calc="biaya" data-values=''>pakai</button></span></div>
+        <div class="frow"><span class="fname">Biaya tetap &amp; variabel rata-rata</span><span class="feq">AFC = FC/Q ;  AVC = TVC/Q</span></div>
+        <div class="frow"><span class="fname">Biaya marjinal</span><span class="feq">MC = ∂TC/∂Q (diskrit: ΔTC/ΔQ)</span></div>
+        <div class="frow"><span class="fname">Titik potong kurva biaya</span><span class="feq">MC memotong AC &amp; AVC di titik minimum masing-masing</span></div>
+        <div class="frow"><span class="fname">Biaya jangka panjang</span><span class="feq">LTC = LVC ; LMC = ∂LTC/∂Q ; LAC = LTC/Q (amplop SAC)</span></div>
+      </div>
+
+      <div class="fgroup">
+        <h3>H · Pasar, Pendapatan &amp; Laba</h3>
+        <div class="frow"><span class="fname">Pendapatan total, marjinal, rata-rata</span><span class="feq">TR = P×Q ; MR = ∂TR/∂Q ; AR = TR/Q</span><span class="go"><button class="btn btn-line" type="button" data-calc="laba" data-values=''>pakai</button></span></div>
+        <div class="frow"><span class="fname">Laba maksimum</span><span class="feq">MR = MC ;  Laba = TR − TC = (P − AC) × Q</span><span class="go"><button class="btn btn-line" type="button" data-calc="laba" data-values='{"seg":"monopoli","a":100,"b":2,"FC":40,"p":10,"q":2,"r":0}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Persaingan sempurna</span><span class="feq">D = MR = AR = P ; kurve penawaran = MC di atas min AVC</span><span class="go"><button class="btn btn-line" type="button" data-calc="laba" data-values='{"seg":"persaingan","Pmark":60}'>pakai</button></span></div>
+        <div class="frow"><span class="fname">Diskriminasi harga (2 pasar)</span><span class="feq">MR1 = MR2 = MRt = MC ; D = d1 + d2 (jumlahkan horizontal MR)</span><span class="go"><button class="btn btn-line" type="button" data-calc="diskriminasi" data-values=''>pakai</button></span></div>
+        <div class="frow"><span class="fname">Invers permintaan &amp; MR linear</span><span class="feq">P = a − bQ → TR = aQ − bQ² → MR = a − 2bQ</span></div>
+        <div class="frow"><span class="fname">Tingkat laba</span><span class="feq">π = TR − TC ; impas (break even) saat P = AC ; shutdown saat P &lt; AVC</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</main>
+</Base>
