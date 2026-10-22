@@ -193,7 +193,7 @@
 
     var out = [];
     out.push('<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' +
-      esc(spec.title || "Grafik") + '">');
+      esc(spec.title || "Grafik") + (spec.sub ? ". " + esc(spec.sub) : "") + '">');
     out.push('<defs><clipPath id="' + clipId + '"><rect x="' + m.l + '" y="' + m.t + '" width="' + pw + '" height="' + ph + '"/></clipPath></defs>');
 
     /* bidang gambar */
@@ -322,6 +322,9 @@
     (spec.points || []).forEach(function (p) {
       var X = sx(p.x), Y = sy(p.y);
       if (!isFinite(X) || !isFinite(Y)) return;
+      /* Titik di luar kotak grafik jangan digambar di atas margin/teks sumbu.
+         Data yang benar seharusnya sudah masuk domain; ini pengaman terakhir. */
+      if (X < m.l - 1 || X > m.l + pw + 1 || Y < m.t - 1 || Y > m.t + ph + 1) return;
       out.push('<circle cx="' + X.toFixed(1) + '" cy="' + Y.toFixed(1) + '" r="4.5" fill="' + col(p.color || "ink") +
         '" stroke="' + cssVar("--surface", "#fffdf8") + '" stroke-width="1.6"/>');
       if (p.label) {

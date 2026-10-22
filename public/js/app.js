@@ -54,6 +54,38 @@
     return (a + b) / 2;
   }
   function nice(v) { return fmt(v); }
+  /* Pastikan pasar punya titik potong di kuadran positif. Kurva linear bisa
+     berpotongan di Q atau P negatif; itu bukan keseimbangan pasar yang bisa
+     digambar/ditafsirkan, jadi lebih baik ditolak dengan pesan jelas. */
+  function cekKeseimbanganPositif(a, b, c, d) {
+    var pe = (a - c) / (b + d);
+    var qe = a - b * pe;
+    if (!(pe > 0) || !(qe > 0)) {
+      throw "Tidak ada keseimbangan pasar di daerah positif dengan angka ini " +
+        "(P* = " + nice(pe) + ", Q* = " + nice(qe) + "). " +
+        "Kurva permintaan dan penawaran harus berpotongan pada harga dan kuantitas yang keduanya lebih besar dari 0. " +
+        "Periksa kembali a, b, c, dan d.";
+    }
+    return { Pe: pe, Qe: qe };
+  }
+  /* Math.max/min biasa menghasilkan NaN bila salah satu argumen NaN.
+     Untuk domain grafik kita hanya ingin nilai yang benar-benar terhitung. */
+  function maksFinite() {
+    var vals = [];
+    for (var i = 0; i < arguments.length; i++) {
+      if (isFinite(arguments[i])) vals.push(arguments[i]);
+    }
+    vals.push(1);
+    return Math.max.apply(null, vals);
+  }
+  function minFinite() {
+    var vals = [];
+    for (var i = 0; i < arguments.length; i++) {
+      if (isFinite(arguments[i])) vals.push(arguments[i]);
+    }
+    vals.push(0);
+    return Math.min.apply(null, vals);
+  }
 
   /* ============================================================ MODES */
   var MODES = {};
@@ -87,6 +119,7 @@
     compute: function (v) {
       var a = v.a, b = v.b, c = v.c, d = v.d;
       if (!ok(a, b, c, d)) throw "Isi keempat koefisien permintaan dan penawaran dengan angka.";
+      if (!(a > 0)) throw "Intersep permintaan (a) harus lebih besar dari 0.";
       if (!(b > 0) || !(d > 0)) throw "Koefisien b (permintaan) dan d (penawaran) harus lebih besar dari 0.";
 
       /* kebijakan yang dicentang — boleh lebih dari satu sekaligus */
@@ -99,6 +132,8 @@
       var Pmin = v.Pmin, Pmax = v.Pmax, Qbar = v.Qbar;
       if (onFloor && !ok(Pmin)) throw "Isi besaran harga minimum (Pmin).";
       if (onCeil && !ok(Pmax)) throw "Isi besaran harga maksimum (Pmax).";
+      if (onFloor && Pmin <= 0) throw "Harga minimum (Pmin) harus lebih besar dari 0.";
+      if (onCeil && Pmax <= 0) throw "Harga maksimum (Pmax) harus lebih besar dari 0.";
       if (onKuota && !(Qbar > 0)) throw "Kuota produksi (Q̄) harus lebih besar dari 0.";
       if (onFloor && onCeil && ok(Pmin, Pmax) && Pmin > Pmax) {
         throw "Harga minimum (" + nice(Pmin) + ") lebih tinggi daripada harga maksimum (" + nice(Pmax) +
@@ -106,7 +141,8 @@
       }
 
       var den = b + d;
-      var Pe = (a - c) / den, Qe = a - b * Pe;
+      var eqPos = cekKeseimbanganPositif(a, b, c, d);
+      var Pe = eqPos.Pe, Qe = eqPos.Qe;
       var choke = a / b, Ps0 = -c / d;
       var hasFiscal = onPajak || onPersen || onSub;
       var w = t - s;             /* belah ketupat tetap per unit: pajak +, subsidi − */
@@ -148,6 +184,8 @@
         var psF = (a - c - b * w) / (d + b * m);
         var pbF = m * psF + w;
         var qF = a - b * pbF;
+        if (!(qF > 0)) throw "Dengan pajak/subsidi sebesar ini tidak ada kuantitas pasar yang positif. Turunkan pajak atau naikkan subsidi.";
+        if (!(pbF >= 0) || !(psF >= 0)) throw "Pajak/subsidi ini menghasilkan harga pembeli atau penjual yang negatif. Periksa kembali besarannya.";
         steps.push({
           label: "Geser penawaran lewat belah ketupat harga: Pb = m·Ps + w",
           lines: [
@@ -192,19 +230,30 @@
           notes.push("Harga minimum hanya efektif bila di atas harga penjual yang berlaku.");
         } else {
           var pbFl = m * Pmin + w;
-          var qdF = a - b * pbFl, qsF = c + d * Pmin;
-          excess = qsF - qdF; excessType = excess >= 0 ? "supply" : "demand";
-          Qt = v.govBuy ? qsF : Math.min(qdF, qsF);
-          Qprod = v.govBuy ? qsF : Qt;
-          govCost = v.govBuy && excess > 0 ? Pmin * excess : 0;
+          var qdFraw = a - b * pbFl, qsFraw = c + d * Pmin;
+          var qdF = Math.max(0, qdFraw);
+          var qsF = Math.max(0, qsFraw);
+          excess = qsF - qdF;
+          excessType = excess >= 0 ? "supply" : "demand";
+          if (v.govBuy) {
+            Qt = qsF;
+            Qprod = qsF;
+            govCost = excess > 0 ? Pmin * excess : 0;
+          } else {
+            Qt = Math.min(qdF, qsF);
+            Qprod = Qt;
+          }
           Pb = pbFl; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
+          if (qdF <= 0) notes.push("Pada harga minimum ini tidak ada pembeli yang mampu membeli (Qd = 0), jadi kuantitas yang terjual ke konsumen nol.");
           steps.push({
             label: "Floor mengikat: kunci harga penjual di Pmin",
             lines: [
               "Ps dikunci = Pmin = " + nice(Pmin),
               "Pb = m×Pmin + w = " + nice(m) + "×" + nice(Pmin) + " + (" + nice(w) + ") = " + nice(pbFl),
-              "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdF),
-              "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsF),
+              "Qd(Pb) = " + nice(a) + " − " + nice(b) + "×" + nice(pbFl) + " = " + nice(qdFraw) +
+                (qdFraw < 0 ? " → 0 (tidak ada permintaan efektif)" : ""),
+              "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsFraw) +
+                (qsFraw < 0 ? " → 0 (tidak ada penawaran efektif)" : ""),
               excess >= 0
                 ? "Kelebihan penawaran = Qs − Qd = " + nice(qsF) + " − " + nice(qdF) + " = " + nice(excess) + " unit"
                 : "Kelangkaan = Qd − Qs = " + nice(qdF) + " − " + nice(qsF) + " = " + nice(-excess) + " unit",
@@ -232,21 +281,24 @@
           notes.push("Harga maksimum hanya efektif bila di bawah harga pembeli yang berlaku.");
         } else {
           var pc = Pmax;
-          var qdC = a - b * pc;
+          var qdCraw = a - b * pc;
+          var qdC = Math.max(0, qdCraw);
           var psC = (pc - w) / m;
+          if (!(psC >= 0)) throw "Harga maksimum ini membuat harga yang diterima penjual negatif. Periksa kembali Pmax, pajak, dan subsidi.";
           if (floorBind && psC < Pmin) {
             /* floor dan ceiling sama-sama mengikat — konflik harga */
-            var qsC2 = c + d * Pmin;
+            var qsC2 = Math.max(0, c + d * Pmin);
             Qt = Math.min(qdC, qsC2); Qprod = Qt;
             Pb = pc; Ps = Pmin; wedge = Pb - Ps; rev = wedge * Qt;
-            excess = qsC2 - qdC; excessType = "supply";
+            excess = qsC2 - qdC; excessType = excess >= 0 ? "supply" : "demand";
             notes.push("Floor dan ceiling sama-sama mengikat: pembeli dibatasi Pmax sementara penjual dijamin Pmin — kuantitas jadi yang terkecil di antara keduanya.");
             steps.push({
               label: "Floor + ceiling sama-sama mengikat (konflik harga)",
               lines: [
                 "Pembeli dibatasi Pb = Pmax = " + nice(pc),
                 "Penjual dijamin Ps = Pmin = " + nice(Pmin),
-                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdC),
+                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdCraw) +
+                  (qdCraw < 0 ? " → 0 (tidak ada permintaan efektif)" : ""),
                 "Qs(Pmin) = " + nice(c) + " + " + nice(d) + "×" + nice(Pmin) + " = " + nice(qsC2),
                 "Kuantitas terjadi = min(Qd, Qs) = " + nice(Qt)
               ],
@@ -254,17 +306,21 @@
               why: "Kedua aturan saling menutup: pembeli tidak boleh membayar di atas Pmax, produsen tidak boleh menerima di bawah Pmin. Selisih Pb − Ps dipaksa oleh aturan, bukan lagi oleh belah ketupat, dan kuantitas pasar jadi yang terkecil di antara yang diminta dan yang ditawarkan."
             });
           } else {
-            var qsC = c + d * psC;
+            var qsCraw = c + d * psC;
+            var qsC = Math.max(0, qsCraw);
             Qt = Math.min(qdC, qsC); Qprod = Qt;
-            excess = qdC - qsC; excessType = "demand";
+            excess = qdC - qsC; excessType = excess >= 0 ? "demand" : "supply";
             Pb = pc; Ps = psC; wedge = Pb - Ps; rev = wedge * Qt;
+            if (qdC <= 0) notes.push("Pada harga maksimum ini permintaan efektif nol (Qd = 0).");
             steps.push({
               label: "Ceiling mengikat: kunci harga pembeli di Pmax",
               lines: [
                 "Pb dikunci = Pmax = " + nice(pc),
                 "Ps = (Pmax − w) / m = (" + nice(pc) + " − (" + nice(w) + ")) / " + nice(m) + " = " + nice(psC),
-                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdC),
-                "Qs(Ps) = " + nice(c) + " + " + nice(d) + "×" + nice(psC) + " = " + nice(qsC),
+                "Qd(Pmax) = " + nice(a) + " − " + nice(b) + "×" + nice(pc) + " = " + nice(qdCraw) +
+                  (qdCraw < 0 ? " → 0 (tidak ada permintaan efektif)" : ""),
+                "Qs(Ps) = " + nice(c) + " + " + nice(d) + "×" + nice(psC) + " = " + nice(qsCraw) +
+                  (qsCraw < 0 ? " → 0 (tidak ada penawaran efektif)" : ""),
                 "Kelangkaan = Qd − Qs = " + nice(qdC) + " − " + nice(qsC) + " = " + nice(qdC - qsC) + " unit",
                 "Yang terbeli = Qs = " + nice(qsC) + " — sisanya antre / pasar gelap"
               ],
@@ -288,9 +344,12 @@
           notes.push("Kuota di atas kuantitas yang berlaku tidak mengikat apa pun.");
         } else {
           var pq = Qbar;
+          if (pq >= a) throw "Kuota Q̄ = " + nice(pq) + " terlalu besar: harga pembeli dari kurva permintaan menjadi nol atau negatif. Kuota harus lebih kecil dari intersep permintaan a = " + nice(a) + ".";
           var pbQ = (a - pq) / b;
           var psMC = (pq - c) / d;
+          if (!(psMC >= 0)) throw "Kuota Q̄ = " + nice(pq) + " terlalu kecil untuk kurva penawaran ini: harga di sisi penjual menjadi negatif. Naikkan kuota atau periksa intersep c.";
           var psNet = (pbQ - w) / m;
+          if (hasFiscal && !(psNet >= 0)) throw "Kuota dan pajak/subsidi ini menghasilkan harga bersih penjual yang negatif. Periksa kembali besarannya.";
           var linesQ = [
             "Kuantitas dikunci Q = Q̄ = " + nice(pq),
             "Pb dari kurva permintaan: Pb = (a − Q̄)/b = (" + nice(a) + " − " + nice(pq) + ") / " + nice(b) + " = " + nice(pbQ),
@@ -319,6 +378,9 @@
       }
 
       /* surplus & dwl pada kuantitas yang benar-benar terjadi */
+      if (!(Qt >= 0) || !(Qprod >= 0) || !(Pb >= 0) || !(Ps >= 0)) {
+        throw "Kombinasi kebijakan ini menghasilkan harga atau kuantitas negatif. Periksa kembali besarannya.";
+      }
       var Qcs = Math.max(Math.min(Qt, a - b * Pb), 0);    /* konsumen beli Qd(Pb), bukan total produksi */
       var Qps = Qprod;                                /* produksi = kuantitas yang dipasok */
       function csv(Q) { return Q <= 0 ? 0 : (a * Q - (Q * Q) / 2) / b - Pb * Q; }
@@ -377,7 +439,20 @@
       ];
       if (excess > 0 && excessType === "supply") results.push({ label: "Kelebihan penawaran", value: nice(excess), sub: "excess supply" });
       if (excess > 0 && excessType === "demand") results.push({ label: "Kelangkaan", value: nice(excess), sub: "excess demand" });
-      if (govCost > 0) results.push({ label: "Biaya pembelian pemerintah", value: nice(govCost), sub: "menyerap kelebihan penawaran" });
+      if (govCost > 0) {
+        results.push({ label: "Biaya pembelian pemerintah", value: nice(govCost), sub: "menyerap kelebihan penawaran" });
+        /* Pembelian pemerintah adalah biaya anggaran, bukan surplus yang dinikmati
+           rumah tangga. Tampilkan angka bersihnya agar tidak terbaca sebagai laba. */
+        var netWelfare = CS + PS + rev - govCost;
+        results.push({
+          label: "Surplus bersih setelah pembelian pemerintah",
+          value: nice(netWelfare),
+          sub: "CS + PS" + (rev > 0 ? " + penerimaan pemerintah" : rev < 0 ? " − biaya subsidi" : "") + " − biaya pembelian"
+        });
+        notes.push("Total surplus di atas adalah CS + PS. Karena pemerintah membeli kelebihan penawaran, biaya pembelian " +
+          nice(govCost) + " harus dikurangkan untuk melihat surplus bersih; angka bersihnya ditampilkan terpisah. " +
+          "DWL pada kartu ini mengukur kuantitas yang lebih kecil dari Q*; kelebihan produksi pada pembelian pemerintah belum dimasukkan ke DWL.");
+      }
       if (rev > 0) results.push({ label: "Penerimaan pemerintah", value: nice(rev), sub: "(Pb − Ps) × Q" });
       else if (rev < 0) results.push({ label: "Biaya subsidi", value: nice(-rev), sub: "(Pb − Ps) × Q" });
 
@@ -581,7 +656,9 @@
       if (sub === "titik") {
         var a = v.e_a, b = v.e_b, P = v.e_P;
         if (!ok(a, b, P)) throw "Isi intersep, kemiringan, dan harga yang diuji.";
+        if (!(a > 0)) throw "Intersep permintaan (a) harus lebih besar dari 0.";
         if (!(b > 0)) throw "Kemiringan b harus lebih besar dari 0.";
+        if (!(P > 0)) throw "Harga yang diuji (P) harus lebih besar dari 0.";
         var Q = a - b * P;
         if (Q <= 0) throw "Pada harga " + nice(P) + " kuantitas = " + nice(Q) +
           " (tidak masuk akal). Pakai harga di bawah " + nice(a / b) + ".";
@@ -644,6 +721,10 @@
       } else if (sub === "busur") {
         var p1 = v.bp1, q1 = v.bq1, p2 = v.bp2, q2 = v.bq2;
         if (!ok(p1, q1, p2, q2)) throw "Isi kedua titik pengamatan (harga & kuantitas).";
+        if (!(p1 > 0) || !(p2 > 0) || !(q1 > 0) || !(q2 > 0)) {
+          throw "Harga dan kuantitas pada kedua pengamatan harus lebih besar dari 0.";
+        }
+        if (Math.abs(p2 - p1) < 1e-12) throw "Harga awal dan akhir harus berbeda; jika tidak, %ΔP = 0 dan elastisitas tidak terdefinisi.";
         var dP = pctChange(p1, p2), dQ = pctChange(q1, q2);
         var Eb = dQ / dP;
         steps.push({
@@ -676,14 +757,19 @@
           { label: "Harga rata-rata", value: nice((p1 + p2) / 2) },
           { label: "Kuantitas rata-rata", value: nice((q1 + q2) / 2) }
         ];
-        var slope = (p2 - p1) / (q2 - q1);
-        var linP = function (Q) { return p1 + slope * (Q - q1); };
+        var sameQ = Math.abs(q2 - q1) < 1e-12;
+        var slope = sameQ ? NaN : (p2 - p1) / (q2 - q1);
+        var linP = sameQ ? null : function (Q) { return p1 + slope * (Q - q1); };
         var qmin = Math.min(q1, q2) * 0.85, qmax = Math.max(q1, q2) * 1.15;
+        var busurSeries = sameQ
+          ? { label: "Q = " + nice(q1) + " (kuantitas tetap)", color: "demand", pts: [[q1, p1], [q2, p2]] }
+          : { label: "P = " + (linP(0) < 0 ? "−" + nice(-linP(0)) : nice(linP(0))) + (slope < 0 ? " − " + nice(-slope) : " + " + nice(slope)) + "Q", color: "demand", fn: linP, xRange: [qmin, qmax] };
         charts = [{
           title: "Elastisitas busur antara dua titik",
           sub: "Garis penghubung kedua pengamatan menjadi penaksiran kurva permintaan; elastisitas busur dihitung dari perubahan relatif, sehingga nilainya mewakili seluruh rentang antara titik 1 dan titik 2, bukan kemiringan garisnya.",
           xLabel: "Kuantitas (Q)", yLabel: "Harga (P)",
-          series: [{ label: "P = " + (linP(0) < 0 ? "−" + nice(-linP(0)) : nice(linP(0))) + (slope < 0 ? " − " + nice(-slope) : " + " + nice(slope)) + "Q", color: "demand", fn: linP, xRange: [qmin, qmax] }],
+          xDomain: [qmin, qmax],
+          series: [busurSeries],
           points: [
             { x: q1, y: p1, color: "ink", label: "1 (" + nice(q1) + "; " + nice(p1) + ")" },
             { x: q2, y: p2, color: "blue", label: "2 (" + nice(q2) + "; " + nice(p2) + ")", dy: 14 }
@@ -692,6 +778,10 @@
       } else if (sub === "silang") {
         var cq1 = v.cx_q1, cq2 = v.cx_q2, cp1 = v.cx_p1, cp2 = v.cx_p2;
         if (!ok(cq1, cq2, cp1, cp2)) throw "Isi kuantitas X dan harga Y untuk kedua pengamatan.";
+        if (!(cq1 > 0) || !(cq2 > 0) || !(cp1 > 0) || !(cp2 > 0)) {
+          throw "Kuantitas X dan harga Y pada kedua pengamatan harus lebih besar dari 0.";
+        }
+        if (Math.abs(cp2 - cp1) < 1e-12) throw "Harga Y awal dan akhir harus berbeda; jika tidak, %ΔPy = 0 dan elastisitas silang tidak terdefinisi.";
         var dqx = pctChange(cq1, cq2), dpy = pctChange(cp1, cp2);
         var Exy = dqx / dpy;
         steps.push({
@@ -715,7 +805,9 @@
         status = "X dan Y adalah barang " + jenis + ". " +
           (Exy > 0
             ? "Naiknya harga Y membuat konsumen pindah ke X."
-            : "Naiknya harga Y menurunkan konsumsi X karena keduanya dipakai bersama.");
+            : Exy < 0
+              ? "Naiknya harga Y menurunkan konsumsi X karena keduanya dipakai bersama."
+              : "Perubahan harga Y tidak mengubah konsumsi X secara sistematis.");
         results = [
           { label: "Elastisitas silang Exy", value: nice(Exy), hero: true },
           { label: "Hubungan barang", value: jenis },
@@ -742,6 +834,10 @@
       } else if (sub === "pendapatan") {
         var iq1 = v.in_q1, iq2 = v.in_q2, ii1 = v.in_i1, ii2 = v.in_i2;
         if (!ok(iq1, iq2, ii1, ii2)) throw "Isi permintaan dan pendapatan untuk kedua pengamatan.";
+        if (!(iq1 > 0) || !(iq2 > 0) || !(ii1 > 0) || !(ii2 > 0)) {
+          throw "Kuantitas dan pendapatan pada kedua pengamatan harus lebih besar dari 0.";
+        }
+        if (Math.abs(ii2 - ii1) < 1e-12) throw "Pendapatan awal dan akhir harus berbeda; jika tidak, %ΔI = 0 dan elastisitas pendapatan tidak terdefinisi.";
         var dqi = pctChange(iq1, iq2), di = pctChange(ii1, ii2);
         var Ei = dqi / di;
         steps.push({
@@ -761,7 +857,13 @@
           result: "EI = " + nice(Ei),
           why: "Elastisitas pendapatan membandingkan perubahan jumlah yang diminta dengan perubahan pendapatan. Tandanya menentukan jenis barang: negatif berarti inferior, positif berarti normal, dan di atas 1 berarti mewah. Angka persen yang dibagi di sini adalah hasil langkah sebelumnya."
         });
-        var kategori = Ei < 0 ? "barang inferior (EI &lt; 0)" : Ei < 1 ? "barang normal pokok (0 &lt; EI &lt; 1)" : "barang normal mewah / luxury (EI &gt; 1)";
+        var kategori = Ei < 0
+          ? "barang inferior (EI &lt; 0)"
+          : Math.abs(Ei - 1) < 1e-12
+            ? "barang normal dengan elastisitas unitary (EI = 1)"
+            : Ei < 1
+              ? "barang normal pokok (0 &lt; EI &lt; 1)"
+              : "barang normal mewah / luxury (EI &gt; 1)";
         status = "Barang tersebut tergolong " + kategori + ".";
         results = [
           { label: "Elastisitas pendapatan EI", value: nice(Ei), hero: true },
@@ -789,6 +891,10 @@
       } else {
         var sq1 = v.sp_q1, sq2 = v.sp_q2, sp1 = v.sp_p1, sp2 = v.sp_p2;
         if (!ok(sq1, sq2, sp1, sp2)) throw "Isi kuantitas penawaran dan harga untuk kedua pengamatan.";
+        if (!(sq1 > 0) || !(sq2 > 0) || !(sp1 > 0) || !(sp2 > 0)) {
+          throw "Kuantitas penawaran dan harga pada kedua pengamatan harus lebih besar dari 0.";
+        }
+        if (Math.abs(sp2 - sp1) < 1e-12) throw "Harga awal dan akhir harus berbeda; jika tidak, %ΔP = 0 dan elastisitas penawaran tidak terdefinisi.";
         var dqs = pctChange(sq1, sq2), dps = pctChange(sp1, sp2);
         var Es = dqs / dps;
         steps.push({
@@ -823,9 +929,9 @@
           sub: "Garis penawaran melalui dua pengamatan harga dan kuantitas; arahnya naik karena hukum penawaran, dan elastisitasnya dihitung dari perubahan relatif kedua titik, bukan dari kemiringan garis.",
           xLabel: "Kuantitas (Qs)", yLabel: "Harga (P)",
           series: [{
-            label: isFinite(slS)
-              ? "P = " + (icS < 0 ? "−" + nice(-icS) : nice(icS)) + (slS < 0 ? " − " + fmt(-slS, 6) : " + " + fmt(slS, 6)) + "Qs"
-              : "P = " + nice(sp1) + " (Qs tetap)",
+            label: Math.abs(sq2 - sq1) < 1e-12
+              ? "Qs = " + nice(sq1) + " (kuantitas tetap)"
+              : "P = " + (icS < 0 ? "−" + nice(-icS) : nice(icS)) + (slS < 0 ? " − " + fmt(-slS, 6) : " + " + fmt(slS, 6)) + "Qs",
             color: "supply", pts: [[sq1, sp1], [sq2, sp2]]
           }],
           points: [
@@ -862,16 +968,18 @@
     compute: function (v) {
       var a = v.a, b = v.b, c = v.c, d = v.d;
       if (!ok(a, b, c, d)) throw "Isi keempat koefisien permintaan dan penawaran.";
+      if (!(a > 0)) throw "Intersep permintaan (a) harus lebih besar dari 0.";
       if (!(b > 0) || !(d > 0)) throw "Koefisien b dan d harus lebih besar dari 0.";
 
-      var h = surplusHelpers(a, b, c, d), Pe = h.Pe, Qe = h.Qe;
+      var eqPos = cekKeseimbanganPositif(a, b, c, d);
+      var Pe = eqPos.Pe, Qe = eqPos.Qe;
       var P = v.Pmode === "custom" ? v.Pcustom : Pe;
       if (!ok(P)) throw "Isi harga yang ingin diuji.";
       if (!(P > 0)) throw "Harga harus lebih besar dari 0.";
 
-      var Qd = a - b * P, Qs = c + d * P;
+      var QdRaw = a - b * P, QsRaw = c + d * P;
+      var Qd = Math.max(0, QdRaw), Qs = Math.max(0, QsRaw);
       var Qt = Math.min(Qd, Qs);
-      if (Qt < 0) Qt = 0;
       var CS = Qt > 0 ? (a * Qt - (Qt * Qt) / 2) / b - P * Qt : 0;
       var PS = Qt > 0 ? P * Qt - ((Qt * Qt) / 2 - c * Qt) / d : 0;
       var pdQ = (a - Qt) / b, psQ = (Qt - c) / d;
@@ -891,7 +999,8 @@
         {
           label: "Kuantitas pada harga yang dipakai",
           lines: [
-            "Pada P = " + nice(P) + " : Qd = " + nice(Qd) + " ;  Qs = " + nice(Qs),
+            "Pada P = " + nice(P) + " : Qd = " + nice(QdRaw) + " ;  Qs = " + nice(QsRaw),
+            "Kuantitas efektif (tidak negatif): Qd = " + nice(Qd) + " ;  Qs = " + nice(Qs),
             "Yang benar-benar ditransaksikan = min(Qd, Qs) = " + nice(Qt),
             Qd > Qs ? "Harga di bawah keseimbangan → kelangkaan " + nice(Qd - Qs) + " unit"
               : Qs > Qd ? "Harga di atas keseimbangan → kelebihan penawaran " + nice(Qs - Qd) + " unit"
@@ -982,6 +1091,7 @@
     compute: function (v) {
       var Ax = v.Ax, bx = v.bx, Ay = v.Ay, by = v.by, Px = v.Px, Py = v.Py, M = v.M;
       if (!ok(Ax, bx, Ay, by, Px, Py, M)) throw "Isi semua kolom.";
+      if (!(Ax > 0) || !(Ay > 0)) throw "Guna marjinal awal (Ax dan Ay) harus lebih besar dari 0.";
       if (!(bx > 0) || !(by > 0)) throw "Penurunan MU (bx dan by) harus lebih besar dari 0.";
       if (!(Px > 0) || !(Py > 0) || !(M > 0)) throw "Harga dan pendapatan harus lebih besar dari 0.";
 
@@ -990,18 +1100,23 @@
       var a2 = -Py * bx, b2 = Px * by, c2 = Px * Ay - Py * Ax;
       var det = Px * b2 - Py * a2;
       if (Math.abs(det) < 1e-12) throw "Kombinasi parameter ini tidak punya solusi tunggal (coba ubah slope).";
-      var Qx = (M * b2 - Py * c2) / det;
-      var Qy = (Px * c2 - a2 * M) / det;
+      var QxRaw = (M * b2 - Py * c2) / det;
+      var QyRaw = (Px * c2 - a2 * M) / det;
+      var Qx = QxRaw, Qy = QyRaw;
       var notes = [], corner = "";
-      if (Qx < 0) { Qx = 0; Qy = M / Py; corner = "solusi sudut: seluruh pendapatan untuk barang Y"; }
-      if (Qy < 0) { Qy = 0; Qx = M / Px; corner = "solusi sudut: seluruh pendapatan untuk barang X"; }
-      if (corner) notes.push("MU salah satu barang terlalu kecil relatif harganya → " + corner + ".");
+      if (Qx < 0) { Qx = 0; Qy = M / Py; corner = "Y"; notes.push("MU barang X terlalu kecil relatif harganya → solusi sudut: seluruh pendapatan untuk barang Y."); }
+      if (Qy < 0) { Qy = 0; Qx = M / Px; corner = "X"; notes.push("MU barang Y terlalu kecil relatif harganya → solusi sudut: seluruh pendapatan untuk barang X."); }
 
       var MUx = Ax - bx * Qx, MUy = Ay - by * Qy;
-      var lam = MUx / Px;
+      /* Pada solusi sudut, λ adalah MU per rupiah dari barang yang tetap dibeli;
+         barang yang tidak dibeli hanya perlu memenuhi MU/P ≤ λ. */
+      var lam = corner === "Y" ? MUy / Py : MUx / Px;
       var TUx = Ax * Qx - (bx * Qx * Qx) / 2;
       var TUy = Ay * Qy - (by * Qy * Qy) / 2;
       var spend = Px * Qx + Py * Qy;
+      if (MUx < 0 || MUy < 0) {
+        notes.push("Guna marjinal salah satu barang sudah negatif: konsumen berada di titik jenuh, sehingga tambahan barang justru menurunkan kepuasan. Grafik tetap menampilkan daerah MU negatif agar posisinya terbaca.");
+      }
 
       var steps = [
         {
@@ -1027,8 +1142,10 @@
           label: "Selesaikan (aturan Cramer)",
           lines: [
             "det = (" + nice(Px) + ")(" + nice(b2) + ") − (" + nice(Py) + ")(" + nice(a2) + ") = " + nice(det),
-            "Qx* = [" + nice(M) + " × " + nice(b2) + " − " + nice(Py) + " × " + nice(c2) + "] : " + nice(det) + " = " + nice(Qx),
-            "Qy* = [" + nice(Px) + " × " + nice(c2) + " − (" + nice(a2) + ") × " + nice(M) + "] : " + nice(det) + " = " + nice(Qy)
+            "Qx mentah = [" + nice(M) + " × " + nice(b2) + " − " + nice(Py) + " × " + nice(c2) + "] : " + nice(det) + " = " + nice(QxRaw) +
+              (QxRaw < 0 ? " → 0 (solusi sudut)" : ""),
+            "Qy mentah = [" + nice(Px) + " × " + nice(c2) + " − (" + nice(a2) + ") × " + nice(M) + "] : " + nice(det) + " = " + nice(QyRaw) +
+              (QyRaw < 0 ? " → 0 (solusi sudut)" : "")
           ],
           result: "Qx* = " + nice(Qx) + " · Qy* = " + nice(Qy),
           why: "Sistem dua persamaan diselesaikan dengan aturan Cramer: determinan utama menjadi pembagi hasil substitusi. Cara ini dipilih karena sistemnya kecil dan linear. Qx* dan Qy* adalah kombinasi yang memenuhi kedua syarat sekaligus, yaitu kepuasan maksimum dengan anggaran habis."
@@ -1038,12 +1155,16 @@
           lines: [
             "MUx = " + nice(Ax) + " − " + nice(bx) + "(" + nice(Qx) + ") = " + nice(MUx),
             "MUy = " + nice(Ay) + " − " + nice(by) + "(" + nice(Qy) + ") = " + nice(MUy),
-            "MUx/Px = " + nice(MUx) + " / " + nice(Px) + " = " + nice(lam),
+            "MUx/Px = " + nice(MUx) + " / " + nice(Px) + " = " + nice(MUx / Px),
             "MUy/Py = " + nice(MUy) + " / " + nice(Py) + " = " + nice(MUy / Py),
-            "→ sama (λ = " + nice(lam) + ")",
+            corner === "Y"
+              ? "Solusi sudut Qx = 0: syaratnya MUx/Px ≤ λ = MUy/Py = " + nice(lam)
+              : corner === "X"
+                ? "Solusi sudut Qy = 0: syaratnya MUy/Py ≤ λ = MUx/Px = " + nice(lam)
+                : "→ sama (λ = " + nice(lam) + ")",
             "Pengeluaran = " + nice(Px) + "(" + nice(Qx) + ") + " + nice(Py) + "(" + nice(Qy) + ") = " + nice(spend) + " (pendapatan = " + nice(M) + ")"
           ],
-          why: "Nilai Qx* dan Qy* dimasukkan kembali ke fungsi guna marjinal untuk memastikan kedua rasio MU terhadap harga benar-benar sama. λ adalah guna marjinal per rupiah terakhir, dan pengeluaran dicek agar sama dengan pendapatan. Kalau ada selisih, berarti solusinya sudut atau parameternya tidak konsisten."
+          why: "Nilai Qx* dan Qy* dimasukkan kembali ke fungsi guna marjinal. Pada solusi interior kedua rasio MU terhadap harga sama dengan λ; pada solusi sudut, barang yang tidak dibeli hanya perlu memenuhi MU/P ≤ λ karena seluruh anggaran habis di barang lain. Pengeluaran dicek agar sama dengan pendapatan."
         },
         {
           label: "Total kepuasan",
@@ -1063,19 +1184,28 @@
         { label: "Total utility", value: nice(TUx + TUy) },
         { label: "MUx dan MUy", value: nice(MUx) + " ; " + nice(MUy) },
         { label: "Pengeluaran", value: nice(spend), sub: "pendapatan " + nice(M) },
-        { label: "MUx/Px = MUy/Py", value: nice(lam) + " = " + nice(MUy / Py) }
+        { label: corner === "Y" ? "Syarat sudut: MUx/Px ≤ λ" : corner === "X" ? "Syarat sudut: MUy/Py ≤ λ" : "MUx/Px = MUy/Py",
+          value: corner === "Y" ? nice(MUx / Px) + " ≤ " + nice(lam)
+            : corner === "X" ? nice(MUy / Py) + " ≤ " + nice(lam)
+              : nice(lam) + " = " + nice(MUy / Py) }
       ];
 
-      var xMax = Math.max(Ax / bx, Ay / by, Qx * 1.3, Qy * 1.3) * 1.05;
-      var yMax = Math.max(Ax, Ay, lam * 1.2) * 1.1;
+      var xMax = Math.max(Ax / bx, Ay / by, Qx * 1.3, Qy * 1.3, 1) * 1.05;
+      var yMin = Math.min(0, MUx, MUy, lam * Px, lam * Py) * 1.08;
+      var yMax = Math.max(Ax, Ay, lam * Px, lam * Py, 1) * 1.08;
+      if (!(yMax > yMin)) yMax = yMin + 1;
       var charts = [{
         title: "Guna marjinal dua barang dan nilai λ",
-        sub: "Dua kurva guna marjinal dan tingkat λ: Qx* dan Qy* berada di ketinggian MU = λ × P masing-masing, tanda bahwa rupiah terakhir di kedua barang memberi tambahan kepuasan per rupiah yang sama.",
+        sub: corner === "Y"
+          ? "Solusi sudut: Qx* = 0, jadi MUx/Px hanya perlu ≤ λ; seluruh anggaran dipakai untuk Y sehingga Qy* berada di MUy = λ × Py."
+          : corner === "X"
+            ? "Solusi sudut: Qy* = 0, jadi MUy/Py hanya perlu ≤ λ; seluruh anggaran dipakai untuk X sehingga Qx* berada di MUx = λ × Px."
+            : "Dua kurva guna marjinal dan tingkat λ: Qx* dan Qy* berada di ketinggian MU = λ × P masing-masing, tanda bahwa rupiah terakhir di kedua barang memberi tambahan kepuasan per rupiah yang sama.",
         xLabel: "Kuantitas barang (Q)", yLabel: "Guna marjinal (MU)",
-        xDomain: [0, xMax], yDomain: [0, yMax],
+        xDomain: [0, xMax], yDomain: [yMin, yMax],
         series: [
-          { label: "MUx = " + nice(Ax) + " − " + nice(bx) + "Qx", color: "supply", pts: [[0, Ax], [Ax / bx, 0]] },
-          { label: "MUy = " + nice(Ay) + " − " + nice(by) + "Qy", color: "blue", pts: [[0, Ay], [Ay / by, 0]] }
+          { label: "MUx = " + nice(Ax) + " − " + nice(bx) + "Qx", color: "supply", pts: [[0, Ax], [Ax / bx, 0], [xMax, Ax - bx * xMax]] },
+          { label: "MUy = " + nice(Ay) + " − " + nice(by) + "Qy", color: "blue", pts: [[0, Ay], [Ay / by, 0], [xMax, Ay - by * xMax]] }
         ],
         hlines: [{ y: lam * Px, label: "MU = λ × Px = " + nice(lam * Px), color: "amber" },
                  { y: lam * Py, label: "MU = λ × Py = " + nice(lam * Py), color: "amber", dash: true }],
@@ -1087,8 +1217,12 @@
 
       return {
         steps: steps, results: results, notes: notes, charts: charts,
-        status: "Kepuasan maksimum pada Qx = " + nice(Qx) + " dan Qy = " + nice(Qy) +
-          ", di mana setiap rupiah terakhir memberi guna marjinal yang sama (" + nice(lam) + ")."
+        status: corner
+          ? "Kepuasan maksimum tercapai di solusi sudut: Qx = " + nice(Qx) + ", Qy = " + nice(Qy) +
+            ". Seluruh anggaran dipakai untuk " + (corner === "Y" ? "barang Y" : "barang X") +
+            ", dengan λ = " + nice(lam) + "."
+          : "Kepuasan maksimum pada Qx = " + nice(Qx) + " dan Qy = " + nice(Qy) +
+            ", di mana setiap rupiah terakhir memberi guna marjinal yang sama (" + nice(lam) + ")."
       };
     }
   };
@@ -1109,15 +1243,17 @@
       var a = v.a, b = v.b, c = v.c, Lmax = v.Lmax, L = v.L;
       if (!ok(a, b, c, Lmax, L)) throw "Isi semua kolom.";
       if (!(Lmax > 0)) throw "Batas L harus lebih besar dari 0.";
+      if (!(L >= 0)) throw "Tenaga kerja (L) tidak boleh negatif.";
+      if (!(a >= 0) || !(b >= 0)) throw "Koefisien a dan b tidak boleh negatif.";
       if (c < 0) throw "Koefisien c (kubik) sebaiknya ≥ 0 agar kurva produksi realistis.";
-      if (c === 0 && b <= 0) throw "Dengan c = 0, koefisien b harus > 0 agar ada AP maksimum.";
+      if (c === 0 && a === 0 && b === 0) throw "Dengan a = b = c = 0, fungsi produksi bernilai nol untuk semua L. Isi minimal salah satu koefisien positif.";
 
       function TP(x) { return a * x + b * x * x - c * x * x * x; }
       function MP(x) { return a + 2 * b * x - 3 * c * x * x; }
       function AP(x) { return a + b * x - c * x * x; }
 
-      var Lap = c > 0 ? b / (2 * c) : Infinity;
-      var APmax = isFinite(Lap) ? AP(Lap) : AP(Lmax);
+      var Lap = c > 0 ? b / (2 * c) : NaN;
+      var APmax = isFinite(Lap) ? AP(Lap) : NaN;
       var mpRoots = roots2(-3 * c, 2 * b, a).filter(function (r) { return r > 0; });
       var Ltpmax = mpRoots.length ? Math.max.apply(null, mpRoots) : NaN;
       var TPmax = isFinite(Ltpmax) ? TP(Ltpmax) : NaN;
@@ -1127,6 +1263,7 @@
       var tp = TP(L), mp = MP(L), ap = AP(L);
       var tahap, saran;
       if (ap <= 0 || tp < 0) { tahap = "di luar daerah produksi"; saran = "Tambahan tenaga kerja belum menghasilkan output positif."; }
+      else if (c === 0 && b === 0) { tahap = "AP konstan, MP = AP (fungsi linear)"; saran = "Tidak ada titik AP maksimum atau MP = 0 yang berhingga; setiap tambahan L menaikkan TP dengan laju tetap."; }
       else if (mp > ap) { tahap = "Tahap 1 (belum rasional memakai input)"; saran = "AP masih naik — masih menguntungkan menambah tenaga kerja."; }
       else if (mp > 0 && isFinite(Ltpmax) && L > Ltpmax) { tahap = "Tahap 3 (tidak rasional)"; saran = "MP sudah negatif — tambahan pekerja justru menurunkan produksi."; }
       else if (mp > 0) { tahap = "Tahap 2 (rasional)"; saran = "Tahap terbaik: AP &gt; MP &gt; 0, penambahan tenaga kerja masih menaikkan produksi."; }
@@ -1192,12 +1329,16 @@
         { label: "MRTS (MPL/MPK)", value: isFinite(MPmax) ? "butuh data K" : "—", sub: "MPL = " + nice(mp) }
       ];
 
-      var xr = [0, Lmax];
-      var yTop1 = Math.max(TP(Lmax), TPmax, tp, 1) * 1.1;
-      var yTop2 = Math.max(MPmax, APmax, mp, ap, 1) * 1.15;
+      var xr = [0, Math.max(Lmax, L) * 1.02];
+      /* Domain harus memuat titik evaluasi dan nilai minimum kurva; jika tidak,
+         titik TP(L) bisa tergambar di luar kotak grafik. */
+      var yTop1 = maksFinite(TP(Lmax), TPmax, tp) * 1.1;
+      var yMin1 = minFinite(0, TP(Lmax), TPmax, tp) * 1.08;
+      var yTop2 = maksFinite(MPmax, APmax, mp, ap, MP(xr[1]), AP(xr[1])) * 1.15;
+      var yMin2 = minFinite(0, mp, ap, MP(xr[1]), AP(xr[1]), MPmax, APmax) * 1.08;
       var regions = [];
-      if (isFinite(Lap) && isFinite(Ltpmax) && Lap < Lmax) {
-        var bandEnd = Math.min(Ltpmax, Lmax);
+      if (isFinite(Lap) && isFinite(Ltpmax) && Lap < xr[1]) {
+        var bandEnd = Math.min(Ltpmax, xr[1]);
         regions.push({
           pts: [[Lap, 0], [bandEnd, 0], [bandEnd, yTop1], [Lap, yTop1]],
           color: "supply", opacity: 0.07
@@ -1208,7 +1349,7 @@
         sub: "Kurva TP, MP, dan AP dari fungsi yang sama dengan langkah di atas: MP memotong AP di titik AP maksimum, dan TP mencapai puncak saat MP = 0." +
           (isFinite(Lap) && isFinite(Ltpmax) ? " Pita hijau menandai tahap rasional antara L = " + nice(Lap) + " dan L = " + nice(Ltpmax) + "." : ""),
         xLabel: "Tenaga kerja (L)", yLabel: "Output (TP)", yLabel2: "MP & AP",
-        xDomain: xr, yDomain: [0, yTop1], yDomain2: [Math.min(0, mp), yTop2],
+        xDomain: xr, yDomain: [yMin1, yTop1], yDomain2: [yMin2, yTop2],
         series: [
           { label: "TP = " + nice(a) + "L + " + nice(b) + "L² − " + nice(c) + "L³ (sumbu kiri)", color: "ink", fn: TP, xRange: xr },
           { label: "MP = " + nice(a) + " + " + nice(2 * b) + "L − " + nice(3 * c) + "L² (sumbu kanan)", color: "demand", axis: 2, fn: MP, xRange: xr },
@@ -1226,7 +1367,13 @@
       }];
 
       var notes = [];
-      if (isFinite(Ltpmax) && Ltpmax > Lmax) notes.push("Titik MP = 0 (L = " + nice(Ltpmax) + ") berada di luar batas gambar; naikkan L maks bila ingin melihatnya.");
+      if (isFinite(Ltpmax) && Ltpmax > xr[1]) notes.push("Titik MP = 0 (L = " + nice(Ltpmax) + ") berada di luar batas gambar; naikkan L maks bila ingin melihatnya.");
+      if (L > Lmax) notes.push("Grafik diperluas sampai L = " + nice(L) + " karena L uji melebihi batas gambar " + nice(Lmax) + ".");
+      if (c === 0) {
+        notes.push(b > 0
+          ? "Karena c = 0, AP dan TP terus naik tanpa titik maksimum yang berhingga; nilai pada tabel adalah nilai di L uji, bukan puncak."
+          : "Karena c = 0 dan b = 0, AP tetap dan TP naik linear tanpa titik maksimum; nilai pada tabel adalah nilai di L uji, bukan puncak.");
+      }
 
       return {
         steps: steps, results: results, notes: notes, charts: charts,
@@ -1252,6 +1399,7 @@
       if (!ok(FC, p, q, r, Q)) throw "Isi semua kolom (boleh nol).";
       if (!(Q > 0)) throw "Kuantitas Q harus lebih besar dari 0.";
       if (FC < 0) throw "Biaya tetap tidak boleh negatif.";
+      if (!(p >= 0) || !(r >= 0)) throw "Koefisien p dan r tidak boleh negatif; keduanya harus menghasilkan biaya yang masuk akal.";
 
       function VC(x) { return p * x + q * x * x + r * x * x * x; }
       function TC(x) { return FC + VC(x); }
@@ -1266,6 +1414,12 @@
       if (!isFinite(Qac)) Qac = NaN;
 
       var t = TC(Q), ac = AC(Q), avc = AVC(Q), afc = AFC(Q), mc = MC(Q);
+      if (!(t >= 0) || !(ac >= 0) || !(avc >= 0) || !(mc >= 0)) {
+        throw "Pada Q ini ada biaya yang negatif. Periksa koefisien p, q, dan r agar TC, AC, AVC, dan MC tidak negatif.";
+      }
+      if (isFinite(Qavc) && !(AVC(Qavc) >= 0)) throw "AVC minimum menjadi negatif; koefisien biaya variabel tidak masuk akal. Periksa p, q, dan r.";
+      if (isFinite(Qmc) && !(MC(Qmc) >= 0)) throw "MC minimum menjadi negatif; koefisien biaya variabel tidak masuk akal. Periksa p, q, dan r.";
+      if (isFinite(Qac) && !(AC(Qac) >= 0)) throw "AC minimum menjadi negatif; koefisien biaya tetap dan variabel tidak masuk akal.";
 
       var steps = [
         {
@@ -1349,18 +1503,24 @@
       ];
 
       var Qstart = Math.max(0.5, (isFinite(Qac) ? Qac / 10 : 1));
-      var Qmax = Math.max(20, isFinite(Qac) ? Qac * 3 : 20, Q * 2.5);
-      var yTop = 0;
+      var Qmax = maksFinite(20, Q * 2.5, isFinite(Qac) ? Qac * 3 : NaN,
+        isFinite(Qavc) ? Qavc * 1.5 : NaN, isFinite(Qmc) ? Qmc * 1.5 : NaN);
+      var yTop = maksFinite(ac, avc, mc, afc);
       for (var i = 0; i <= 60; i++) {
         var x = Qstart + (Qmax - Qstart) * (i / 60);
-        yTop = Math.max(yTop, isFinite(AC(x)) ? AC(x) : 0, isFinite(AVC(x)) ? AVC(x) : 0, MC(x));
+        yTop = maksFinite(yTop, AC(x), AVC(x), MC(x), AFC(x));
       }
+      if (isFinite(Qavc)) yTop = maksFinite(yTop, AVC(Qavc), MC(Qavc));
+      if (isFinite(Qac)) yTop = maksFinite(yTop, AC(Qac), MC(Qac));
+      if (isFinite(Qmc)) yTop = maksFinite(yTop, MC(Qmc));
       yTop *= 1.08;
+      var yMin = minFinite(0, ac, avc, mc, AC(Qstart), AVC(Qstart), MC(Qstart)) * 1.05;
+      if (!(yTop > yMin)) yTop = yMin + 1;
       var charts = [{
         title: "Kurva biaya rata-rata dan marjinal",
         sub: "MC memotong AVC di titik tutup usaha dan memotong AC di titik impas. Garis tegak menandai Q uji serta kedua titik minimum yang dihitung pada langkah sebelumnya, sehingga terlihat apakah biaya rata-rata masih turun atau sudah naik.",
         xLabel: "Kuantitas produksi (Q)", yLabel: "Biaya per unit / marjinal",
-        xDomain: [0, Qmax], yDomain: [0, yTop],
+        xDomain: [0, Qmax], yDomain: [yMin, yTop],
         series: [
           { label: "AC = " + nice(FC) + "/Q + " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "blue", fn: AC, xRange: [Qstart, Qmax], n: 160 },
           { label: "AVC = " + nice(p) + (q === 0 ? "" : (q < 0 ? " − " + nice(-q) : " + " + nice(q)) + "Q") + (r === 0 ? "" : (r < 0 ? " − " + nice(-r) : " + " + nice(r)) + "Q²"), color: "demand", fn: AVC, xRange: [Qstart, Qmax], n: 160 },
@@ -1408,11 +1568,13 @@
     compute: function (v) {
       var FC = v.FC, p = v.p, q = v.q, r = v.r;
       if (!ok(FC, p, q, r)) throw "Isi koefisien biaya (boleh 0).";
+      if (FC < 0 || p < 0 || r < 0) throw "FC, p, dan r tidak boleh negatif.";
       var seg = v.seg || "monopoli";
       var a, b, Pmark;
       if (seg === "monopoli") {
         a = v.a; b = v.b;
         if (!ok(a, b) || !(b > 0)) throw "Isi intersep dan kemiringan permintaan (b harus > 0).";
+        if (!(a > 0)) throw "Intersep permintaan (a) harus lebih besar dari 0.";
       } else {
         Pmark = v.Pmark;
         if (!ok(Pmark) || !(Pmark > 0)) throw "Isi harga pasar yang berlaku.";
@@ -1487,8 +1649,16 @@
       }
 
       var TR = P * Q, tc = TC(Q), profit = TR - tc, ac = AC(Q), avc = AVC(Q), mc = MC(Q);
-      var Qavc = (r > 0 && q < 0) ? -q / (2 * r) : NaN;
-      var avcMin = isFinite(Qavc) ? AVC(Qavc) : NaN;
+      if (!(ac >= 0) || !(avc >= 0) || !(mc >= 0)) {
+        throw "Pada Q* ini biaya rata-rata atau biaya marjinal negatif. Periksa kembali p, q, dan r agar MC dan AC masuk akal.";
+      }
+      /* AVC minimum bisa berada di Q = 0 bila AVC tidak pernah turun
+         (q ≥ 0 atau r = 0); dalam kasus itu harga shutdown sama dengan p. */
+      var Qavc = (r > 0 && q < 0) ? -q / (2 * r) : 0;
+      var avcMin = isFinite(Qavc) && Qavc > 0 ? AVC(Qavc) : p;
+      if (!(avcMin >= 0)) {
+        throw "AVC minimum negatif. Koefisien biaya variabel tidak masuk akal untuk analisis shutdown; periksa p, q, dan r.";
+      }
 
       steps.push({
         label: "Hitung laba",
@@ -1525,16 +1695,17 @@
         { label: "MR dan MC pada Q*", value: nice(seg === "monopoli" ? a - 2 * b * Q : P) + " ; " + nice(mc) },
         { label: "Margin per unit", value: nice(P - ac) },
         { label: "P − MC (kekuatan harga)", value: nice(P - mc) },
-        { label: "Titik impas (P = AC)", value: isFinite(Qavc) ? "AVC min = " + nice(avcMin) : "—" }
+        { label: "Harga shutdown (AVC min)", value: isFinite(avcMin) ? nice(avcMin) : "—" }
       ];
 
       var yTopCand = [P, mc, ac];
+      if (seg === "monopoli") yTopCand.push(a);
       var Qmax = seg === "monopoli" ? Math.max(a / b, Q * 1.4) : Math.max(Q * 2.2, 1);
       for (var i2 = 0; i2 <= 40; i2++) {
         var xx = (Qmax) * (i2 / 40);
         if (xx > 0) yTopCand.push(AC(xx), MC(xx));
       }
-      var yTop = Math.max.apply(null, yTopCand.filter(isFinite)) * 1.1;
+      var yTop = maksFinite.apply(null, yTopCand) * 1.1;
       if (!(yTop > 0)) yTop = 1;
       var series = [], regions = [], hlines = [], vlines = [], points = [];
       if (seg === "monopoli") {
@@ -1585,9 +1756,11 @@
     compute: function (v) {
       var a1 = v.a1, b1 = v.b1, a2 = v.a2, b2 = v.b2, c0 = v.c0, c1 = v.c1, FC = v.FC || 0;
       if (!ok(a1, b1, a2, b2, c0, c1, FC)) throw "Isi semua kolom (FC boleh 0).";
+      if (!(a1 > 0) || !(a2 > 0)) throw "Intersep permintaan pasar 1 dan 2 (a1, a2) harus lebih besar dari 0.";
       if (!(b1 > 0) || !(b2 > 0)) throw "Kemiringan permintaan b1 dan b2 harus lebih besar dari 0.";
       if (c1 < 0) throw "Kemiringan MC (c1) tidak boleh negatif.";
       if (c0 < 0) throw "Konstanta MC tidak boleh negatif.";
+      if (FC < 0) throw "Biaya tetap tidak boleh negatif.";
 
       var notes = [];
       /* iterasi himpunan pasar aktif */
@@ -1620,7 +1793,8 @@
       if (Q2 <= 0) notes.push("Pasar 2 tidak dilayani: pada MR bersama, MR pasar 2 sudah di bawah MC sejak unit pertama.");
       notes.push("Pembagian pasar harus efektif (tidak bisa dijual ulang antar pasar), jika tidak harga rendah akan bocor ke pasar mahal.");
 
-      var E1 = -b1 * (P1 / (Q1 || 1)), E2 = -b2 * (P2 / (Q2 || 1));
+      var E1 = Q1 > 0 ? -b1 * (P1 / Q1) : NaN;
+      var E2 = Q2 > 0 ? -b2 * (P2 / Q2) : NaN;
       var steps = [
         {
           label: "Invers permintaan dan MR tiap pasar",
@@ -1666,8 +1840,12 @@
         {
           label: "Elastisitas tiap pasar dan laba",
           lines: [
-            "E1 = (∂Q1/∂P1) × (P1/Q1) = (" + nice(-b1) + ")(" + nice(P1) + "/" + nice(Q1) + ") = " + nice(E1),
-            "E2 = (" + nice(-b2) + ")(" + nice(P2) + "/" + nice(Q2) + ") = " + nice(E2),
+            Q1 > 0
+              ? "E1 = (∂Q1/∂P1) × (P1/Q1) = (" + nice(-b1) + ")(" + nice(P1) + "/" + nice(Q1) + ") = " + nice(E1)
+              : "E1 = — (pasar 1 tidak dilayani)",
+            Q2 > 0
+              ? "E2 = (" + nice(-b2) + ")(" + nice(P2) + "/" + nice(Q2) + ") = " + nice(E2)
+              : "E2 = — (pasar 2 tidak dilayani)",
             "TR = " + nice(TR1) + " + " + nice(TR2) + " = " + nice(TR),
             "TC = " + nice(FC) + " + " + nice(c0) + "(" + nice(Qt) + ")" + (c1 > 0 ? " + ½(" + nice(c1) + ")(" + nice(Qt * Qt) + ")" : "") + " = " + nice(TC),
             "Laba = TR − TC = " + nice(profit)
@@ -1691,12 +1869,21 @@
         { label: "Selisih harga", value: nice(Math.abs(P1 - P2)), sub: "P1 − P2 = " + nice(P1 - P2) }
       ];
 
-      var mrtInv = function (Q) { return ((a1 + a2) - 2 * Q) / (b1 + b2); };
+      /* MRt hanya menjumlahkan pasar yang benar-benar aktif. Bila satu pasar
+         tidak dilayani, kurva MRt harus sama dengan MR pasar yang aktif. */
+      var activeA = (Q1 > 0 ? a1 : 0) + (Q2 > 0 ? a2 : 0);
+      var activeB = (Q1 > 0 ? b1 : 0) + (Q2 > 0 ? b2 : 0);
+      var mrtInv = function (Q) { return activeB > 0 ? (activeA - 2 * Q) / activeB : NaN; };
       var mcFn = function (Q) { return c0 + c1 * Q; };
       var qm1 = Math.max(Q1 * 1.6, a1 / b1 * 0.6), qm2 = Math.max(Q2 * 1.6, a2 / b2 * 0.6);
       var yD1 = Math.max(a1 / b1, P1 * 1.2), yD2 = Math.max(a2 / b2, P2 * 1.2);
       var qmT = Math.max(Qt * 1.5, 1);
-      var yT = Math.max(mrtInv(0), m, c0 + c1 * qmT) * 1.15;
+      var yT = maksFinite(mrtInv(0), m, c0 + c1 * qmT) * 1.15;
+      var combinedSeries = [];
+      if (Q1 > 0) combinedSeries.push({ label: "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1", color: "demand", width: 1.4, dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] });
+      if (Q2 > 0) combinedSeries.push({ label: "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2", color: "supply", width: 1.4, dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] });
+      if (activeB > 0) combinedSeries.push({ label: "MRt = " + nice(activeA / activeB) + " − " + nice(2 / activeB) + "QTotal", color: "ink", fn: mrtInv, xRange: [0, activeA / 2], n: 60 });
+      combinedSeries.push({ label: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "QTotal" : ""), color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 });
 
       var charts = [
         {
@@ -1730,12 +1917,7 @@
           sub: "MRt adalah penjumlahan horizontal MR1 dan MR2; perpotongannya dengan MC menentukan output total, lalu output itu dibagi kembali ke tiap pasar menurut MR masing-masing.",
           xLabel: "Kuantitas total (QTotal)", yLabel: "MR & MC per unit",
           xDomain: [0, qmT], yDomain: [0, yT],
-          series: [
-            { label: "MR1 = " + nice(a1 / b1) + " − " + nice(2 / b1) + "Q1", color: "demand", width: 1.4, dash: true, pts: [[0, a1 / b1], [a1 / 2, 0]] },
-            { label: "MR2 = " + nice(a2 / b2) + " − " + nice(2 / b2) + "Q2", color: "supply", width: 1.4, dash: true, pts: [[0, a2 / b2], [a2 / 2, 0]] },
-            { label: "MRt = " + nice((a1 + a2) / (b1 + b2)) + " − " + nice(2 / (b1 + b2)) + "QTotal", color: "ink", fn: mrtInv, xRange: [0, (a1 + a2) / 2], n: 60 },
-            { label: "MC = " + nice(c0) + (c1 > 0 ? " + " + nice(c1) + "QTotal" : ""), color: "blue", fn: mcFn, xRange: [0, qmT], n: 60 }
-          ],
+          series: combinedSeries,
           points: [{ x: Qt, y: m, color: "ink", label: "QTotal = " + nice(Qt) + " ; MR = MC = " + nice(m) }],
           vlines: [{ x: Qt, color: "ink" }]
         }
@@ -2024,16 +2206,15 @@
         }
       }
     } catch (e) {
-      /* pertahankan hasil terakhir yang benar, hanya tampilkan peringatan */
+      /* Jangan biarkan angka/grafik lama tetap tampil di samping input baru
+         yang gagal dihitung — itu mudah disalahartikan sebagai hasil valid. */
       showError(e && e.message ? e.message : String(e));
-      if (force) {
-        renderResults([]);
-        renderSteps([]);
-        renderNotes([]);
-        renderStatus("");
-        var c = $("calc-charts");
-        if (c) c.innerHTML = "";
-      }
+      renderResults([]);
+      renderSteps([]);
+      renderNotes([]);
+      renderStatus("");
+      var c = $("calc-charts");
+      if (c) c.innerHTML = "";
     }
   }
 
